@@ -3,21 +3,33 @@ package Licenta.Licenta.Controller;
 
 import Licenta.Licenta.Model.User;
 import Licenta.Licenta.Service.UserService;
+//import ch.qos.logback.core.model.Model;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.ui.Model;
 
 import java.util.List;
 import java.util.Optional;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("/api")
 @RequiredArgsConstructor
-@CrossOrigin("*")
 public class UserController {
+    @Autowired
+    private UserDetailsService userDetailsService;;
+    
     private final UserService userService;
+   /* public UserController(UserService userService) {
+        this.userService = userService;
+    }*/
+    
     @PostMapping("/user")
     public User postUser(@RequestBody User user){
         try{
@@ -78,6 +90,14 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
     }
+    @GetMapping("/authenticate")
+    public ResponseEntity<String> authenticate() {
+        return ResponseEntity.ok("Autentificare reușită!");
+    }
+    /*public String authenticate(Model model, User user) {
+        model.addAttribute("USER", user); // corectare: adăugăm atributul în model
+        return "login"; // returnăm numele view-ului (login.html)
+    }*/
 
 
 }
