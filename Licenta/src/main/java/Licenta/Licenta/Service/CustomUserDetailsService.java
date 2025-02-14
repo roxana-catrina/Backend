@@ -15,27 +15,13 @@ import java.util.Collection;
 @Service
 public class CustomUserDetailsService implements UserDetailsService{
     private UserRepository userRepository;
-  /*  @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user= userRepository.findByEmail(username);
-        if(user==null){
-            throw new UsernameNotFoundException("User  or password not found");
-        }
-        return new CustomUserDetails(user.getEmail()
-                ,user.getParola()
-                 ,authorities()
-                ,user.getPrenume()
-        ,user.getNume()
-        ,user.getSex()
-        ,user.getData_nasterii()
-        ,user.getNumar_telefon()
-        ,user.getTara());
-    }*/
+
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User or password not found"));
+        User user = userRepository.findByEmail(username);
+
+        if(user==null) throw new UsernameNotFoundException("User or password not found");
 
         return new CustomUserDetails(user.getEmail(),
                 user.getParola(),
@@ -50,7 +36,7 @@ public class CustomUserDetailsService implements UserDetailsService{
 
 
     public Collection<? extends GrantedAuthority> authorities() {
-        return Arrays.asList(new SimpleGrantedAuthority("ROLE_USER"));
+        return Arrays.asList(new SimpleGrantedAuthority("USER"));
 
     }
 }

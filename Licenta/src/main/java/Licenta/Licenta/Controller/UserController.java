@@ -1,7 +1,12 @@
 package Licenta.Licenta.Controller;
 
 
+import Licenta.Licenta.Dto.UserDto;
+import Licenta.Licenta.Model.LoginRequest;
 import Licenta.Licenta.Model.User;
+import Licenta.Licenta.Repository.UserRepository;
+import Licenta.Licenta.Service.CustomUserDetails;
+import Licenta.Licenta.Service.CustomUserDetailsService;
 import Licenta.Licenta.Service.UserService;
 //import ch.qos.logback.core.model.Model;
 import lombok.RequiredArgsConstructor;
@@ -10,12 +15,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.ui.Model;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+
+import static Licenta.Licenta.Configuration.SecurityConfig.passwordEncoder;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:4200")
@@ -23,9 +30,15 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserController {
     @Autowired
-    private UserDetailsService userDetailsService;;
+    private UserDetailsService userDetailsService;
     
     private final UserService userService;
+    @Autowired
+    private CustomUserDetailsService customUserDetailsService;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
    /* public UserController(UserService userService) {
         this.userService = userService;
     }*/
@@ -90,14 +103,53 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
     }
-    @GetMapping("/authenticate")
+  /*  @GetMapping("/authenticate")
     public ResponseEntity<String> authenticate() {
         return ResponseEntity.ok("Autentificare reușită!");
-    }
+    }*/
+
+   /* @PostMapping("/authenticate")
+    public ResponseEntity<UserDetails> authenticate(@RequestBody LoginRequest loginRequest) {
+        String email = loginRequest.getEmail();
+        User user=userRepository.findByEmail(email);
+        if(user!=null){
+            String parolaRequest=passwordEncoder.encode(loginRequest.getParola());
+            if(Objects.equals(user.getParola(), parolaRequest))
+            return ResponseEntity.ok(customUserDetailsService.loadUserByUsername(email));
+        }
+        return null;
+    }*/
     /*public String authenticate(Model model, User user) {
         model.addAttribute("USER", user); // corectare: adăugăm atributul în model
         return "login"; // returnăm numele view-ului (login.html)
     }*/
+   @PostMapping("/authenticate")
+   public ResponseEntity<?> authenticate(@RequestBody LoginRequest loginRequest) {
+       User user = userRepository.findByEmail(loginRequest.getEmail());
 
+       if (user == null) {
+           return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
+       }
+
+       if (!passwordEncoder.matches(loginRequest.getParola(), user.getParola())) {
+           return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid password");
+       }
+
+       UserDto userDTO = convertToDTO(user);
+       return ResponseEntity.ok(userDTO);
+   }
+
+    private UserDto convertToDTO(User user) {
+        UserDto dto = new UserDto();
+        dto.setEmail(user.getEmail());
+        dto.setPrenume(user.getPrenume());
+        dto.setNume(user.getNume());
+        dto.setSex(user.getSex());
+        dto.setParola(user.getParola());
+        dto.setData_nasterii(user.getData_nasterii());
+        dto.setNumar_telefon(user.getNumar_telefon());
+        dto.setTara(user.getTara());
+        return dto;
+    }
 
 }
