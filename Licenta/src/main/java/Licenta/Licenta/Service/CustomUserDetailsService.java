@@ -16,13 +16,20 @@ import java.util.Collection;
 public class CustomUserDetailsService implements UserDetailsService{
     private UserRepository userRepository;
 
+    public CustomUserDetailsService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(username);
+       /* User user = (User)userRepository.findByEmail(username);
 
         if(user==null) throw new UsernameNotFoundException("User or password not found");
-
+        System.out.println("User found: " + user.getUsername());*/
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+     //   System.out.println(user.getEmail()+" "+user.getParola()+ "aiciiii meregeg");
         return new CustomUserDetails(user.getEmail(),
                 user.getParola(),
                 authorities(),

@@ -5,16 +5,21 @@ import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
+
 @Data
 @Entity
 @DynamicInsert
 @DynamicUpdate
 @Table(name="utilizatori")
-public class User  implements Serializable {
+public class User  implements   Serializable{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="id")
@@ -44,4 +49,6 @@ public class User  implements Serializable {
 
     @Column(name="tara")
     private String tara;
+
+
 }
