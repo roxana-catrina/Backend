@@ -142,6 +142,7 @@ public class UserController {
        AuthenticationResponse authenticationResponse = new AuthenticationResponse();
        authenticationResponse.setJwt(token);
        authenticationResponse.setId(user.getId());
+       authenticationResponse.setNume(user.getNume());
 
        return ResponseEntity.ok(authenticationResponse);
    }

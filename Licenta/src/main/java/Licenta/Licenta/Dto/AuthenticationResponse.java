@@ -6,4 +6,5 @@ import lombok.Data;
 public class AuthenticationResponse {
     private String jwt;
     private Long id;
+    private String nume;
 }
