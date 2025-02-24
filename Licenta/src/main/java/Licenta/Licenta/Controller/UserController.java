@@ -46,13 +46,12 @@ public class UserController {
     private UserRepository userRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
-   /* public UserController(UserService userService) {
-        this.userService = userService;
-    }*/
    @Autowired
    private JwtUtil jwtUtil;
     @Autowired
     private AuthenticationManager authenticationManager;
+
+
 
     @PostMapping("/user")
     public User postUser(@RequestBody User user){
@@ -95,7 +94,7 @@ public class UserController {
         existingUser.setNume(user.getNume());
         existingUser.setPrenume(user.getPrenume());
         existingUser.setEmail(user.getEmail());
-        existingUser.setParola(user.getParola());
+        existingUser.setParola(passwordEncoder.encode(user.getParola()));
         existingUser.setData_nasterii(user.getData_nasterii());
         existingUser.setSex(user.getSex());
         existingUser.setTara(user.getTara());
