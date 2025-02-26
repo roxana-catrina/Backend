@@ -22,4 +22,5 @@ public class TaraService {
          return taraRepository.findAll();
      }
 
+
 }

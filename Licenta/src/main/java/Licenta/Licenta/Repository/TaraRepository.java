@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TaraRepository extends JpaRepository<Tara,Long> {
+Tara findByPrefix(String prefix);
+
 }

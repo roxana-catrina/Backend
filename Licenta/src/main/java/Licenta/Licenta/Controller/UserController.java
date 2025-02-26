@@ -98,6 +98,7 @@ public class UserController {
         existingUser.setData_nasterii(user.getData_nasterii());
         existingUser.setSex(user.getSex());
         existingUser.setTara(user.getTara());
+        existingUser.setNumar_telefon(user.getNumar_telefon());
 
         // Salvăm utilizatorul actualizat
         User updatedUser = userService.updateUser(existingUser);
