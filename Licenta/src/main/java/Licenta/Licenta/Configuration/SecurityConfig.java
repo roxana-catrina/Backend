@@ -51,7 +51,7 @@ public class SecurityConfig {
 
             http    .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth ->
-                        auth.requestMatchers("/api/users", "/api/user/**","/api/authenticate","api/countries").permitAll() // Allow login request
+                        auth.requestMatchers("/api/users", "/api/user/**","/api/authenticate","api/countries","/api/user").permitAll() // Allow login request
                                 .anyRequest().authenticated()
                 ).sessionManagement(manager->manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
@@ -83,6 +83,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of("http://localhost:4200"));
         config.setAllowedHeaders(List.of("*"));
+
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowCredentials(true);
 
@@ -93,12 +94,15 @@ public class SecurityConfig {
                 "Content-Type"
         ));
 
+
         // Setează max age pentru preflight cache
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-        return source;
+        // source.registerCorsConfiguration("/api/**", config); // Aplica configurarea doar pentru endpoint-urile /api
+
+         return source;
     }
 
 

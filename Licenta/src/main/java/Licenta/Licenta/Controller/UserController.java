@@ -28,6 +28,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.Map;
 import java.util.*;
 
@@ -56,6 +57,9 @@ public class UserController {
     @PostMapping("/user")
     public User postUser(@RequestBody User user){
         try{
+            user.setNume(user.getNume().toUpperCase());
+           // if(user.getData_nasterii().isAfter( LocalDate.now()))
+               // throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Data de nastere incorecta" );
             return userService.postUser(user);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Eroare la salvarea utilizatorului. Detalii: " + e.getMessage(), e);
@@ -89,7 +93,7 @@ public class UserController {
         if (!existingUser.getEmail().equals(user.getEmail()) && userService.existsByEmail(user.getEmail())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(null); // 409 Conflict
         }
-
+        user.setNume(user.getNume().toUpperCase());
         // Actualizăm datele utilizatorului
         existingUser.setNume(user.getNume());
         existingUser.setPrenume(user.getPrenume());
