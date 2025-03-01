@@ -3,6 +3,7 @@ package Licenta.Licenta.Service;
 
 import Licenta.Licenta.Model.User;
 import Licenta.Licenta.Repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,6 +34,7 @@ public class UserService {
         return userRepository.findAll();
     }
 
+    @Transactional
     public User getUserById(Long id) {
         Optional<User> optionalUser = userRepository.findById(id.toString());
         if (optionalUser.isPresent()) {

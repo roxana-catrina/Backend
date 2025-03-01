@@ -51,7 +51,8 @@ public class SecurityConfig {
 
             http    .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth ->
-                        auth.requestMatchers("/api/users", "/api/user/**","/api/authenticate","api/countries","/api/user").permitAll() // Allow login request
+                        auth.requestMatchers("/api/users", "/api/user/**","/api/authenticate","api/countries","/api/user","/api/user/{userId}/imagine",
+                                        "/api/user/{userId}/imagini").permitAll() // Allow login request
                                 .anyRequest().authenticated()
                 ).sessionManagement(manager->manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
@@ -79,7 +80,7 @@ public class SecurityConfig {
 
 
      @Bean
-    CorsConfigurationSource corsConfigurationSource() {
+    CorsConfigurationSource corsConfigurationSource(/*HttpSecurity http*/) throws Exception {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of("http://localhost:4200"));
         config.setAllowedHeaders(List.of("*"));
@@ -93,8 +94,11 @@ public class SecurityConfig {
                 "Content-Disposition",
                 "Content-Type"
         ));
-
-
+   /*http.csrf(csrf -> csrf.disable()) // Dezactivează CSRF pentru testare
+                 .authorizeHttpRequests(auth -> auth
+                         .requestMatchers("/api/users/**").permitAll() // Permite accesul la /api/users
+                         .anyRequest().authenticated()
+                 );*/
         // Setează max age pentru preflight cache
         config.setMaxAge(3600L);
 
