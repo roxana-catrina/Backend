@@ -17,4 +17,10 @@ public class Imagine {
     @ManyToOne
     @JoinColumn(name="user_id")
         private User user;
+
+    @Column(name="nume")
+    private String nume;
+
+    @Column(name="tip")
+    private String tip;
 }
