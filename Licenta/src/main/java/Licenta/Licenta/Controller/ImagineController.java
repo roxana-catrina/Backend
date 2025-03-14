@@ -1,5 +1,6 @@
 package Licenta.Licenta.Controller;
 
+import Licenta.Licenta.Dto.ImagineDto;
 import Licenta.Licenta.Model.Imagine;
 import Licenta.Licenta.Model.User;
 import Licenta.Licenta.Repository.ImagineRepository;
@@ -15,11 +16,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
+
 
 @RestController
 //@RequestMapping("/user")
@@ -75,7 +78,7 @@ public class ImagineController {
         return outputStream.toByteArray();
     }
 
-    @GetMapping("/{id}/imagini")
+   /* @GetMapping("/{id}/imagini")
     public ResponseEntity<List<String>> getUserImages(@PathVariable Long id) {
         List<Imagine> imagini = imagineService.getAllImaginIByIdUser(id);
         if (imagini.isEmpty()) {
@@ -87,7 +90,7 @@ public class ImagineController {
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok().body(imageDataList);
-    }
+    }*/
     public static byte[] decompressBytes(byte[] data) {
         Inflater inflater = new Inflater();
         inflater.setInput(data);
@@ -104,4 +107,69 @@ public class ImagineController {
         }
         return outputStream.toByteArray();
     }
+   @GetMapping("/{id}/imagini")
+   public ResponseEntity<List<ImagineDto>> getUserImages(@PathVariable Long id) {
+       List<Imagine> imagini = imagineService.getAllImaginIByIdUser(id);
+       if (imagini.isEmpty()) {
+           return ResponseEntity.notFound().build();
+       }
+
+       List<ImagineDto> imagineDTOList = imagini.stream()
+               .map(image -> new ImagineDto(
+                       image.getId(),  // ID-ul imaginii
+                       Base64.getEncoder().encodeToString(decompressBytes(image.getImagine())),  // Imaginea în format Base64
+                       image.getNume(),  // Numele imaginii
+                       image.getTip()  // Tipul imaginii
+               ))
+               .collect(Collectors.toList());
+
+       return ResponseEntity.ok().body(imagineDTOList);
+   }
+
+
+    /*@DeleteMapping("/{userId}/imagine")
+    public ResponseEntity<?> deleteImage(@PathVariable Long userId, @RequestBody Map<String, String> payload) {
+        try {
+            String imageData = payload.get("imagine");
+            if (imageData == null) {
+                return ResponseEntity.badRequest().body("No image data provided");
+            }
+
+            // Remove the "data:image/jpeg;base64," prefix if present
+            String base64Image = imageData.contains(",") ?
+                    imageData.substring(imageData.indexOf(",") + 1) :
+                    imageData;
+
+            // Convert base64 string back to byte array
+            byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+
+            // Find and delete the image from the database
+            boolean deleted = imagineService.deteleImagineByImagineAndUser(imageBytes,userId);
+
+            if (deleted) {
+                return ResponseEntity.ok().build();
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error deleting image: " + e.getMessage());
+        }
+    }*/
+    @DeleteMapping("/{id}/imagini")
+    public ResponseEntity<String> deleteImage(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        String base64Image = body.get("imagine").replaceAll("\\s+", "");  // Elimină caracterele de linie nouă și spațiile
+        byte[] imageBytes = Base64.getDecoder().decode(base64Image);  // Decodifici în byte[]
+
+        // Găsește imaginea în baza de date folosind imageBytes
+        Optional<Imagine> imagine = imagineRepository.findByImagineAndUser(imageBytes, userRepository.findById(id).get());
+
+        if (imagine.isPresent()) {
+            imagineRepository.delete(imagine.get());  // Șterge imaginea din baza de date
+            return ResponseEntity.ok("Imaginea a fost ștearsă");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Imaginea nu a fost găsită");
+        }
+    }
+
 }

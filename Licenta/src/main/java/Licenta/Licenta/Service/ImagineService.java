@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -24,4 +25,12 @@ public class ImagineService {
         return imagini;
 
     }
-}
+    public boolean deteleImagineByImagineAndUser(byte[] imagine, Long idUser){
+        Optional<Imagine> image = imagineRepository.findByImagineAndUser( imagine,userRepository.findById(idUser).get());
+        if (image.isPresent()) {
+            imagineRepository.delete(image.get());
+            return true;
+        }
+        return false;
+    }
+    }
