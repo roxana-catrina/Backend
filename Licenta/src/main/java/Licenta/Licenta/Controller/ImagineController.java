@@ -6,6 +6,7 @@ import Licenta.Licenta.Model.User;
 import Licenta.Licenta.Repository.ImagineRepository;
 import Licenta.Licenta.Repository.UserRepository;
 import Licenta.Licenta.Service.ImagineService;
+import Licenta.Licenta.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +38,8 @@ public class ImagineController {
 
     @Autowired
     private ImagineService imagineService;
+    @Autowired
+    private UserService userService;
 
     /// incarcarea img
     @PostMapping("/{id}/imagine")
@@ -48,7 +51,7 @@ public class ImagineController {
 
 
         User user = userOptional.get();
-        Imagine userImage = new  Imagine();
+        Imagine userImage = new Imagine();
         userImage.setUser(user);
         userImage.setNume(file.getOriginalFilename());
         userImage.setTip(file.getContentType());
@@ -78,19 +81,19 @@ public class ImagineController {
         return outputStream.toByteArray();
     }
 
-   /* @GetMapping("/{id}/imagini")
-    public ResponseEntity<List<String>> getUserImages(@PathVariable Long id) {
-        List<Imagine> imagini = imagineService.getAllImaginIByIdUser(id);
-        if (imagini.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+    /* @GetMapping("/{id}/imagini")
+     public ResponseEntity<List<String>> getUserImages(@PathVariable Long id) {
+         List<Imagine> imagini = imagineService.getAllImaginIByIdUser(id);
+         if (imagini.isEmpty()) {
+             return ResponseEntity.notFound().build();
+         }
 
-        List<String> imageDataList = imagini.stream()
-                .map(image -> Base64.getEncoder().encodeToString(decompressBytes(image.getImagine())))
-                .collect(Collectors.toList());
+         List<String> imageDataList = imagini.stream()
+                 .map(image -> Base64.getEncoder().encodeToString(decompressBytes(image.getImagine())))
+                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok().body(imageDataList);
-    }*/
+         return ResponseEntity.ok().body(imageDataList);
+     }*/
     public static byte[] decompressBytes(byte[] data) {
         Inflater inflater = new Inflater();
         inflater.setInput(data);
@@ -107,24 +110,25 @@ public class ImagineController {
         }
         return outputStream.toByteArray();
     }
-   @GetMapping("/{id}/imagini")
-   public ResponseEntity<List<ImagineDto>> getUserImages(@PathVariable Long id) {
-       List<Imagine> imagini = imagineService.getAllImaginIByIdUser(id);
-       if (imagini.isEmpty()) {
-           return ResponseEntity.notFound().build();
-       }
 
-       List<ImagineDto> imagineDTOList = imagini.stream()
-               .map(image -> new ImagineDto(
-                       image.getId(),  // ID-ul imaginii
-                       Base64.getEncoder().encodeToString(decompressBytes(image.getImagine())),  // Imaginea în format Base64
-                       image.getNume(),  // Numele imaginii
-                       image.getTip()  // Tipul imaginii
-               ))
-               .collect(Collectors.toList());
+    @GetMapping("/{id}/imagini")
+    public ResponseEntity<List<ImagineDto>> getUserImages(@PathVariable Long id) {
+        List<Imagine> imagini = imagineService.getAllImaginIByIdUser(id);
+        if (imagini.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
 
-       return ResponseEntity.ok().body(imagineDTOList);
-   }
+        List<ImagineDto> imagineDTOList = imagini.stream()
+                .map(image -> new ImagineDto(
+                        image.getId(),  // ID-ul imaginii
+                        Base64.getEncoder().encodeToString(decompressBytes(image.getImagine())),  // Imaginea în format Base64
+                        image.getNume(),  // Numele imaginii
+                        image.getTip()  // Tipul imaginii
+                ))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok().body(imagineDTOList);
+    }
 
 
     /*@DeleteMapping("/{userId}/imagine")
@@ -172,4 +176,24 @@ public class ImagineController {
         }
     }
 
+    @GetMapping("/{id}/imagine/{imageId}")
+    public ResponseEntity<ImagineDto> getImage(@PathVariable Long id, @PathVariable Long imageId) {
+        Optional<Imagine> imagine = imagineService.findByUserIdAndId(id, imageId);
+        if (imagine.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Creăm DTO-ul corect
+        ImagineDto imagineDto = new ImagineDto(
+                imagine.get().getId(),
+                Base64.getEncoder().encodeToString(decompressBytes(imagine.get().getImagine())),
+                imagine.get().getNume(),
+                imagine.get().getTip()
+        );
+
+        return ResponseEntity.ok(imagineDto);
+    }
+
+
 }
+

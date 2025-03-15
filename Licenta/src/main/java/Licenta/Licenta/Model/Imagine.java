@@ -16,7 +16,7 @@ public class Imagine {
 
     @ManyToOne
     @JoinColumn(name="user_id")
-        private User user;
+    private User user;
 
     @Column(name="nume")
     private String nume;
