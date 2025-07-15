@@ -98,7 +98,7 @@ public class UserController {
         existingUser.setNume(user.getNume());
         existingUser.setPrenume(user.getPrenume());
         existingUser.setEmail(user.getEmail());
-        existingUser.setParola(passwordEncoder.encode(user.getParola()));
+       // existingUser.setParola(passwordEncoder.encode(user.getParola()));
         existingUser.setData_nasterii(user.getData_nasterii());
         existingUser.setSex(user.getSex());
         existingUser.setTara(user.getTara());
