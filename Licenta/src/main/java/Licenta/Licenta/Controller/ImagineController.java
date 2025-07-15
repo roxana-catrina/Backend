@@ -49,12 +49,15 @@ public class ImagineController {
             return ResponseEntity.notFound().build();
         }
 
-
         User user = userOptional.get();
         Imagine userImage = new Imagine();
         userImage.setUser(user);
         userImage.setNume(file.getOriginalFilename());
-        userImage.setTip(file.getContentType());
+        String contentType = file.getContentType();
+        if ("image/jpg".equals(contentType)) {
+            contentType = "image/jpeg";
+        }
+        userImage.setTip(contentType);
         userImage.setImagine(compressBytes(file.getBytes())); // Dacă salvezi în DB
         imagineRepository.save(userImage);
         System.out.println("Uploading image for user: " + id);
@@ -102,10 +105,10 @@ public class ImagineController {
     @GetMapping("/{id}/imagini")
     public ResponseEntity<List<ImagineDto>> getUserImages(@PathVariable Long id) {
         List<Imagine> imagini = imagineService.getAllImaginIByIdUser(id);
+
         if (imagini.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-
         List<ImagineDto> imagineDTOList = imagini.stream()
                 .map(image -> new ImagineDto(
                         image.getId(),  // ID-ul imaginii
@@ -118,19 +121,6 @@ public class ImagineController {
         return ResponseEntity.ok().body(imagineDTOList);
     }
 
-
-   /*
-    @DeleteMapping("/{id}/imagine/{imageId}")
-    public ResponseEntity<String> deleteImage(@PathVariable Long id, @PathVariable Long imageId) {
-        Optional<Imagine> imagine = imagineRepository.findById(imageId);
-
-        if (imagine.isPresent() && imagine.get().getUser().getId().equals(id)) {
-            imagineRepository.delete(imagine.get());
-            return ResponseEntity.ok("Imaginea a fost ștearsă");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Imaginea nu a fost găsită");
-        }
-    }*/
 
     @DeleteMapping("/{userId}/imagine/{imageId}")
     public ResponseEntity<?> deleteImage(@PathVariable Long userId, @PathVariable Long imageId) {
