@@ -7,6 +7,8 @@ import Licenta.Licenta.Repository.ImagineRepository;
 import Licenta.Licenta.Repository.UserRepository;
 import Licenta.Licenta.Service.ImagineService;
 import Licenta.Licenta.Service.UserService;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
@@ -23,6 +26,8 @@ import java.util.stream.Collectors;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
+
+
 
 
 @RestController
@@ -35,7 +40,8 @@ public class ImagineController {
 
     @Autowired
     private UserRepository userRepository;
-
+    @Autowired
+    private Cloudinary cloudinary;
     @Autowired
     private ImagineService imagineService;
     @Autowired
@@ -43,48 +49,52 @@ public class ImagineController {
 
     /// incarcarea img
     @PostMapping("/{id}/imagine")
-    public ResponseEntity<String> uploadImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) throws IOException {
+    public ResponseEntity<String> uploadImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
         Optional<User> userOptional = userRepository.findById(id);
         if (!userOptional.isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
-        User user = userOptional.get();
-        Imagine userImage = new Imagine();
-        userImage.setUser(user);
-        userImage.setNume(file.getOriginalFilename());
-        String contentType = file.getContentType();
-        if ("image/jpg".equals(contentType)) {
-            contentType = "image/jpeg";
-        }
-        userImage.setTip(contentType);
-        userImage.setImagine(compressBytes(file.getBytes())); // Dacă salvezi în DB
-        imagineRepository.save(userImage);
-        System.out.println("Uploading image for user: " + id);
-        return ResponseEntity.ok(HttpStatus.OK.toString());
-    }
-
-    public static byte[] compressBytes(byte[] data) {
-        Deflater deflater = new Deflater();
-        deflater.setInput(data);
-        deflater.finish();
-
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);
-        byte[] buffer = new byte[1024];
-        while (!deflater.finished()) {
-            int count = deflater.deflate(buffer);
-            outputStream.write(buffer, 0, count);
-        }
         try {
-            outputStream.close();
-        } catch (IOException e) {
-        }
-        System.out.println("Compressed Image Byte Size - " + outputStream.toByteArray().length);
+            // Salvează temporar fișierul pe disc
+            File tempFile = File.createTempFile("temp-", file.getOriginalFilename());
+            file.transferTo(tempFile);
 
-        return outputStream.toByteArray();
+            // Urcă fișierul pe Cloudinary
+            Map uploadResult = cloudinary.uploader().upload(tempFile, ObjectUtils.emptyMap());
+            String imageUrl = (String) uploadResult.get("secure_url");
+            String publicId = (String) uploadResult.get("public_id");
+
+            // Salvează informația imaginii în baza de date
+            User user = userOptional.get();
+            Imagine userImage = new Imagine();
+            userImage.setUser(user);
+            userImage.setNume(file.getOriginalFilename());
+
+
+            String contentType = file.getContentType();
+            if ("image/jpg".equals(contentType)) {
+                contentType = "image/jpeg";
+            }
+            userImage.setTip(contentType);
+            userImage.setImageUrl(imageUrl);
+            userImage.setCloudinaryPublicId(publicId);
+            imagineRepository.save(userImage);
+            System.out.println("Uploading image for user: " + id);
+
+            return ResponseEntity.ok(imageUrl); // returnează URL-ul imaginii
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Upload failed.");
+        }
     }
 
-  ;
+
+   /* @PostMapping("/upload")
+    public ResponseEntity<String> uploadImage(@RequestParam("file") MultipartFile file) {
+
+    }*/
+
+
     public static byte[] decompressBytes(byte[] data) {
         Inflater inflater = new Inflater();
         inflater.setInput(data);
@@ -109,12 +119,14 @@ public class ImagineController {
         if (imagini.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+
         List<ImagineDto> imagineDTOList = imagini.stream()
                 .map(image -> new ImagineDto(
-                        image.getId(),  // ID-ul imaginii
-                        Base64.getEncoder().encodeToString(decompressBytes(image.getImagine())),  // Imaginea în format Base64
-                        image.getNume(),  // Numele imaginii
-                        image.getTip()  // Tipul imaginii
+                        image.getId(),              // ID-ul imaginii
+                        image.getImageUrl(),             // URL-ul imaginii din cloud
+                        image.getNume(),            // Numele imaginii
+                        image.getTip(),      // Tipul imaginii (opțional)
+                        image.getImageUrl()
                 ))
                 .collect(Collectors.toList());
 
@@ -122,46 +134,56 @@ public class ImagineController {
     }
 
 
-    @DeleteMapping("/{userId}/imagine/{imageId}")
-    public ResponseEntity<?> deleteImage(@PathVariable Long userId, @PathVariable Long imageId) {
-        try {
-            // First check if image exists and belongs to user
-            Optional<Imagine> imagine = imagineRepository.findByUserIdAndId(userId,imageId);
 
-            if (!imagine.isPresent()) {
-                return ResponseEntity
-                        .status(HttpStatus.NOT_FOUND)
-                        .body("Imaginea nu a fost găsită sau nu aparține acestui utilizator");
-            }
 
-            // Delete the image
-            imagineRepository.delete(imagine.get());
-            getUserImages(userId);
+  @DeleteMapping("/{userId}/imagine/{imageId}")
+  public ResponseEntity<?> deleteImage(@PathVariable Long userId, @PathVariable Long imageId) {
+      try {
+          // Verifică dacă imaginea există și aparține utilizatorului
+          Optional<Imagine> imagineOptional = imagineRepository.findByUserIdAndId(userId, imageId);
 
-            return ResponseEntity.ok("Imaginea a fost ștearsă cu succes");
-        } catch (Exception e) {
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Eroare la ștergerea imaginii: " + e.getMessage());
-        }
-    }
-    @GetMapping("/{id}/imagine/{imageId}")
-    public ResponseEntity<ImagineDto> getImage(@PathVariable Long id, @PathVariable Long imageId) {
-        Optional<Imagine> imagine = imagineService.findByUserIdAndId(id, imageId);
-        if (imagine.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+          if (imagineOptional.isEmpty()) {
+              return ResponseEntity
+                      .status(HttpStatus.NOT_FOUND)
+                      .body("Imaginea nu a fost găsită sau nu aparține acestui utilizator.");
+          }
 
-        // Creăm DTO-ul corect
-        ImagineDto imagineDto = new ImagineDto(
-                imagine.get().getId(),
-                Base64.getEncoder().encodeToString(decompressBytes(imagine.get().getImagine())),
-                imagine.get().getNume(),
-                imagine.get().getTip()
-        );
-          getUserImages(id);
-        return ResponseEntity.ok(imagineDto);
-    }
+          Imagine imagine = imagineOptional.get();
+
+          // Șterge imaginea din Cloudinary
+          if (imagine.getCloudinaryPublicId() != null && !imagine.getCloudinaryPublicId().isEmpty()) {
+              Map result = cloudinary.uploader().destroy(imagine.getCloudinaryPublicId(), ObjectUtils.emptyMap());
+              System.out.println("Cloudinary delete result: " + result);
+          }
+
+          // Șterge din baza de date
+          imagineRepository.delete(imagine);
+
+          return ResponseEntity.ok("Imaginea a fost ștearsă cu succes din Cloudinary și din baza de date.");
+      } catch (Exception e) {
+          return ResponseEntity
+                  .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                  .body("Eroare la ștergerea imaginii: " + e.getMessage());
+      }
+  }
+
+
+
+   @GetMapping("/{id}/imagine/{imageId}")
+   public ResponseEntity<String> getImageUrl(@PathVariable Long id, @PathVariable Long imageId) {
+       Optional<Imagine> imagine = imagineService.findByUserIdAndId(id, imageId);
+
+       if (imagine.isEmpty()) {
+           return ResponseEntity.notFound().build();
+       }
+
+       String imageUrl = imagine.get().getImageUrl(); // URL-ul de la Cloudinary
+       return ResponseEntity.ok(imagine.get().getImageUrl());
+   }
+
+
+
+
 
 
 }
