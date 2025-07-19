@@ -23,4 +23,14 @@ public class Imagine {
 
     @Column(name="tip")
     private String tip;
+
+    @Column(name="image_url")
+    private String imageUrl;
+
+     @Column(name="cloudinaryPublicId")
+    private String cloudinaryPublicId;
+
+
 }
+
+

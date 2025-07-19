@@ -11,7 +11,9 @@ import java.util.Base64;
 @AllArgsConstructor
 public class ImagineDto {
     private Long id;
-    private String imagine;
+    private String imageUrl;
     private String nume;
     private String tip;
+    private String cloudinaryPublicId;
+
 }
