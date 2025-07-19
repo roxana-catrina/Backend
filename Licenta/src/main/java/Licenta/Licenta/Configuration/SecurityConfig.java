@@ -52,7 +52,7 @@ public class SecurityConfig {
             http    .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/api/users", "/api/user/**","/api/authenticate","api/countries","/api/user","/api/user/{userId}/imagine",
-                                        "/api/user/{userId}/imagini").permitAll() // Allow login request
+                                        "/api/user/{userId}/imagini" ,"/api/user/upload").permitAll() // Allow login request
                                 .anyRequest().authenticated()
                 ).sessionManagement(manager->manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
