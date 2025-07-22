@@ -193,15 +193,14 @@ else userImage.setDataNasterii(null);
 
 
    @GetMapping("/{id}/imagine/{imageId}")
-   public ResponseEntity<String> getImageUrl(@PathVariable Long id, @PathVariable Long imageId) {
+   public ResponseEntity<Imagine> getImage(@PathVariable Long id, @PathVariable Long imageId) {
        Optional<Imagine> imagine = imagineService.findByUserIdAndId(id, imageId);
 
        if (imagine.isEmpty()) {
            return ResponseEntity.notFound().build();
        }
-
-       String imageUrl = imagine.get().getImageUrl(); // URL-ul de la Cloudinary
-       return ResponseEntity.ok(imagine.get().getImageUrl());
+       
+       return ResponseEntity.ok(imagine.get());
    }
 
 
