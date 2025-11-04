@@ -5,6 +5,7 @@ import org.apache.catalina.filters.CorsFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -45,23 +46,38 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthentificationFilter jwtAuthentificationFilter) throws Exception {/*http
-                . exceptionHandling(exception ->
-                exception.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))) ;// Returnează 401*/
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthentificationFilter jwtAuthentificationFilter) throws Exception {
+        http.cors(cors -> {
+            try {
+                cors.configurationSource(corsConfigurationSource());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
 
-            http    .csrf(AbstractHttpConfigurer::disable)
+        http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth ->
-                        auth.requestMatchers("/api/users", "/api/user/**","/api/authenticate","api/countries","/api/user","/api/user/{userId}/imagine",
-                                        "/api/user/{userId}/imagini" ,"/api/user/upload").permitAll() // Allow login request
+                        auth.requestMatchers(
+                                        "/api/users",
+                                        "/api/user/**",
+                                        "/api/authenticate",
+                                        "api/countries",
+                                        "/api/user",
+                                        "/api/user/{userId}/imagine",
+                                        "/api/user/{userId}/imagini",
+                                        "/api/user/upload",
+                                        "/api/brain-tumor/**"
+                                ).permitAll()
+                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .anyRequest().authenticated()
-                ).sessionManagement(manager->manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider())
+                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthentificationFilter, UsernamePasswordAuthenticationFilter.class)
-                .formLogin(AbstractHttpConfigurer::disable) ;// Prevent redirect to login page
-
+                .formLogin(AbstractHttpConfigurer::disable);
 
         return http.build();
     }
+
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
@@ -108,6 +124,7 @@ public class SecurityConfig {
 
          return source;
     }
+
 
 
 }

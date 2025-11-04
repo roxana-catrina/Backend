@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Intellij.iml" filepath="$PROJECT_DIR$/.idea/Intellij.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Licenta/Licenta.iml" filepath="$PROJECT_DIR$/Licenta/Licenta.iml" />
     </modules>
   </component>
 </project>
