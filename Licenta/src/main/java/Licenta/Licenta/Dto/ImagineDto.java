@@ -15,5 +15,6 @@ public class ImagineDto {
     private String nume;
     private String tip;
     private String cloudinaryPublicId;
+    private String numePacient;
 
 }
