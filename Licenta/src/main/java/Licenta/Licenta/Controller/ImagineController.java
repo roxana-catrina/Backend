@@ -149,7 +149,8 @@ else userImage.setDataNasterii(null);
                         image.getImageUrl(),             // URL-ul imaginii din cloud
                         image.getNume(),            // Numele imaginii
                         image.getTip(),      // Tipul imaginii (opțional)
-                        image.getImageUrl()
+                        image.getImageUrl(),
+                        image.getNumePacient()
                 ))
                 .collect(Collectors.toList());
 
