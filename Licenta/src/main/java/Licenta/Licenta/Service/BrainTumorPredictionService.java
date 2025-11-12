@@ -139,9 +139,43 @@ public class BrainTumorPredictionService {
             result.setHasTumor(root.get("has_tumor").asBoolean());
             result.setConfidence(root.get("confidence").asDouble());
 
-            JsonNode probabilities = root.get("probabilities");
-            result.setNoTumorProbability(probabilities.get("no_tumor").asDouble());
-            result.setTumorProbability(probabilities.get("tumor").asDouble());
+            // Parse tumor type information
+            if (root.has("tumor_type")) {
+                result.setType(root.get("tumor_type").asText());
+            }
+
+            if (root.has("tumor_type_confidence")) {
+                result.setTumorTypeConfidence(root.get("tumor_type_confidence").asDouble());
+            }
+
+            // Parse basic probabilities
+            if (root.has("probabilities")) {
+                JsonNode probabilities = root.get("probabilities");
+                result.setNoTumorProbability(probabilities.get("no_tumor").asDouble());
+                result.setTumorProbability(probabilities.get("tumor").asDouble());
+            }
+
+            // Parse tumor type probabilities
+            if (root.has("tumor_type_probabilities")) {
+                JsonNode tumorTypeProbs = root.get("tumor_type_probabilities");
+                Map<String, Double> tumorTypeProbMap = new HashMap<>();
+                tumorTypeProbs.fields().forEachRemaining(entry ->
+                    tumorTypeProbMap.put(entry.getKey(), entry.getValue().asDouble())
+                );
+                result.setTumorTypeProbabilities(tumorTypeProbMap);
+            }
+
+            // Parse raw multiclass probabilities
+            if (root.has("raw_multiclass_probabilities")) {
+                JsonNode rawProbs = root.get("raw_multiclass_probabilities");
+                Map<String, Double> rawProbMap = new HashMap<>();
+                rawProbs.fields().forEachRemaining(entry ->
+                    rawProbMap.put(entry.getKey(), entry.getValue().asDouble())
+                );
+                result.setRawMulticlassProbabilities(rawProbMap);
+            }
+
+            System.out.println(result);
         } else {
             result.setError(root.get("error").asText());
         }
