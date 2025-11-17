@@ -66,7 +66,8 @@ public class SecurityConfig {
                                         "/api/user/{userId}/imagine",
                                         "/api/user/{userId}/imagini",
                                         "/api/user/upload",
-                                        "/api/brain-tumor/**"
+                                        "/api/brain-tumor/**",
+                                        "/api/programari/**"
                                 ).permitAll()
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .anyRequest().authenticated()

@@ -16,4 +16,5 @@ public interface ImagineRepository extends JpaRepository<Imagine, Integer> {
   // Optional <Imagine> findByUserAndId(User user,Long imagineId);
    Optional<Imagine> findByUserIdAndId(Long idUser, Long id);
    Optional<Imagine> findById(Long id);
+   Optional<Imagine> findFirstByUserId(Long userId);
 }
