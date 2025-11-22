@@ -55,7 +55,8 @@ public class User  implements   Serializable{
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Imagine> images = new ArrayList<>();
-
+    @Column(name = "profile_photo_url", length = 500)
+    private String profilePhotoUrl;
 
 
 }
