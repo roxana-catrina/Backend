@@ -67,7 +67,18 @@ public class SecurityConfig {
                                         "/api/user/{userId}/imagini",
                                         "/api/user/upload",
                                         "/api/brain-tumor/**",
-                                        "/api/programari/**"
+                                        "/api/programari/**",
+                                        "/api/programari/**",
+                                        // Mesaj controller routes (singular + plural)
+                                        "/api/mesaj/**",
+                                        "/api/mesaje/**",
+                                        // Notificare controller routes (singular + plural)
+                                        "/api/notificare/**",
+                                        "/api/notificari/**",
+                                        // WebSocket / STOMP endpoints commonly used
+                                        "/ws/**",
+                                        "/websocket/**",
+                                        "/ws-mesaj/**"
                                 ).permitAll()
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .anyRequest().authenticated()

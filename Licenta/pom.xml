@@ -54,6 +54,32 @@
 			<artifactId>spring-security-web</artifactId>
 			<version>6.3.5</version> <!-- Sau versiunea ta de Spring Security -->
 		</dependency>
+        <!-- WebSocket pentru comunicare în timp real -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
+
+        <!-- Option B: RabbitMQ (AMQP) starter -->
+        <!-- xml -->
+        <!-- Option A: Spring Framework messaging (for SimpMessaging, controllers, WebSocket messaging) -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-messaging</artifactId>
+        </dependency>
+
+        <!-- Option B: RabbitMQ (AMQP) starter — use this only if you run RabbitMQ and want AMQP support -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+
+        <!-- Server-Sent Events (alternativă) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
