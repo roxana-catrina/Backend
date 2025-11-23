@@ -1,20 +1,31 @@
 package Licenta.Licenta.Configuration;
 
 import com.cloudinary.Cloudinary;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import io.github.cdimascio.dotenv.Dotenv;
+
 import java.util.HashMap;
 import java.util.Map;
- @Configuration
+
+@Configuration
 public class CloudinaryConfig {
+
+    @Value("${cloudinary.cloud-name}")
+    private String cloudName;
+
+    @Value("${cloudinary.api-key}")
+    private String apiKey;
+
+    @Value("${cloudinary.api-secret}")
+    private String apiSecret;
+
     @Bean
     public Cloudinary cloudinary() {
-        Dotenv dotenv = Dotenv.load();
         Map<String, String> config = new HashMap<>();
-        config.put("cloud_name", dotenv.get("CN"));
-        config.put("api_key", dotenv.get("AK"));
-        config.put("api_secret", dotenv.get("AS"));
+        config.put("cloud_name", cloudName);
+        config.put("api_key", apiKey);
+        config.put("api_secret", apiSecret);
         return new Cloudinary(config);
     }
 }

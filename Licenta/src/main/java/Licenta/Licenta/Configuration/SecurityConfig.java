@@ -74,7 +74,10 @@ public class SecurityConfig {
                                         // WebSocket / STOMP endpoints commonly used
                                         "/ws/**",
                                         "/websocket/**",
-                                        "/ws-mesaj/**"
+                                        "/ws-mesaj/**",
+                                "/api/password-reset/**",
+                                "/api/test/check-user/**",
+                                "/api/test/test-email/**"
                                 ).permitAll()
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .anyRequest().authenticated()
