@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -101,6 +102,8 @@ public class PacientController {
                 imagine.setTip(contentType);
                 imagine.setImageUrl(imageUrl);
                 imagine.setCloudinaryPublicId(publicId);
+                imagine.setDataIncarcare(new Date());
+                imagine.setStatusAnaliza("neanalizata");
 
                 imagineService.saveImagine(imagine);
 
@@ -219,6 +222,8 @@ public class PacientController {
                 imagine.setTip(contentType);
                 imagine.setImageUrl(imageUrl);
                 imagine.setCloudinaryPublicId(publicId);
+                imagine.setDataIncarcare(new Date());
+                imagine.setStatusAnaliza("neanalizata");
 
                 imagineService.saveImagine(imagine);
 
@@ -276,12 +281,150 @@ public class PacientController {
             imagine.setTip(contentType);
             imagine.setImageUrl(imageUrl);
             imagine.setCloudinaryPublicId(publicId);
+            imagine.setDataIncarcare(new Date());
+            imagine.setStatusAnaliza("neanalizata");
 
             imagineService.saveImagine(imagine);
 
             return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Upload failed: " + e.getMessage());
+        }
+    }
+
+    // Upload imagine with additional details (nume, tip, observatii, statusAnaliza)
+    @PostMapping("/{userId}/pacient/{pacientId}/imagine")
+    public ResponseEntity<?> uploadImagineWithDetails(
+            @PathVariable String userId,
+            @PathVariable String pacientId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("nume") String nume,
+            @RequestParam("tip") String tip,
+            @RequestParam(value = "observatii", required = false) String observatii,
+            @RequestParam(value = "statusAnaliza", defaultValue = "neanalizata") String statusAnaliza,
+            @RequestHeader(value = "Authorization", required = false) String token) {
+
+        // Verify user exists
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "User not found"));
+        }
+
+        // Verify pacient exists and belongs to user
+        Optional<Pacient> pacientOptional = pacientService.findByUserIdAndId(userId, pacientId);
+        if (pacientOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "Pacient not found or does not belong to this user"));
+        }
+
+        try {
+            // Upload image to Cloudinary
+            File tempFile = File.createTempFile("temp-", file.getOriginalFilename());
+            file.transferTo(tempFile);
+
+            Map uploadResult = cloudinary.uploader().upload(tempFile, ObjectUtils.emptyMap());
+            String imageUrl = (String) uploadResult.get("secure_url");
+            String publicId = (String) uploadResult.get("public_id");
+
+            // Create and save Imagine
+            Imagine imagine = new Imagine();
+            imagine.setPacientId(pacientId);
+            imagine.setNume(nume);
+
+            String contentType = tip;
+            if ("image/jpg".equals(contentType)) {
+                contentType = "image/jpeg";
+            }
+
+            imagine.setTip(contentType);
+            imagine.setImageUrl(imageUrl);
+            imagine.setCloudinaryPublicId(publicId);
+            imagine.setObservatii(observatii);
+            imagine.setStatusAnaliza(statusAnaliza);
+            imagine.setDataIncarcare(new Date());
+
+            Imagine savedImagine = imagineService.saveImagine(imagine);
+
+            tempFile.delete();
+
+            return ResponseEntity.ok(savedImagine);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Upload failed: " + e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", "Error uploading image: " + e.getMessage()));
+        }
+    }
+
+    // Update imagine details
+    @PutMapping("/{userId}/pacient/{pacientId}/imagine/{imagineId}")
+    public ResponseEntity<?> updateImagineDetails(
+            @PathVariable String userId,
+            @PathVariable String pacientId,
+            @PathVariable String imagineId,
+            @RequestBody Imagine imagineUpdate,
+            @RequestHeader(value = "Authorization", required = false) String token) {
+
+        // Verify user exists
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "User not found"));
+        }
+
+        // Verify pacient exists and belongs to user
+        Optional<Pacient> pacientOptional = pacientService.findByUserIdAndId(userId, pacientId);
+        if (pacientOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "Pacient not found or does not belong to this user"));
+        }
+
+        // Verify imagine exists and belongs to pacient
+        Optional<Imagine> imagineOptional = imagineService.findByPacientIdAndId(pacientId, imagineId);
+        if (imagineOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "Imagine not found or does not belong to this pacient"));
+        }
+
+        try {
+            Imagine imagine = imagineOptional.get();
+
+            // Update all fields if provided
+            if (imagineUpdate.getNume() != null) {
+                imagine.setNume(imagineUpdate.getNume());
+            }
+            if (imagineUpdate.getTip() != null) {
+                imagine.setTip(imagineUpdate.getTip());
+            }
+            if (imagineUpdate.getObservatii() != null) {
+                imagine.setObservatii(imagineUpdate.getObservatii());
+            }
+            if (imagineUpdate.getStatusAnaliza() != null) {
+                imagine.setStatusAnaliza(imagineUpdate.getStatusAnaliza());
+            }
+            if (imagineUpdate.getAreTumoare() != null) {
+                imagine.setAreTumoare(imagineUpdate.getAreTumoare());
+            }
+            if (imagineUpdate.getTipTumoare() != null) {
+                imagine.setTipTumoare(imagineUpdate.getTipTumoare());
+            }
+            if (imagineUpdate.getConfidenta() != null) {
+                imagine.setConfidenta(imagineUpdate.getConfidenta());
+            }
+            if (imagineUpdate.getDataAnalizei() != null) {
+                imagine.setDataAnalizei(imagineUpdate.getDataAnalizei());
+            }
+
+            // Update dataModificare timestamp
+            imagine.setDataModificare(new Date());
+
+            Imagine updatedImagine = imagineService.saveImagine(imagine);
+            return ResponseEntity.ok(updatedImagine);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error updating imagine: " + e.getMessage()));
         }
     }
 
@@ -304,7 +447,19 @@ public class PacientController {
                                     img.getImageUrl(),
                                     img.getNume(),
                                     img.getTip(),
-                                    img.getCloudinaryPublicId()
+                                    img.getCloudinaryPublicId(),
+                                    img.getAreTumoare(),
+                                    img.getTipTumoare(),
+                                    img.getConfidenta(),
+                                    img.getDataAnalizei(),
+                                    img.getStatusAnaliza(),
+                                    img.getObservatii(),
+
+                                    img.getDataIncarcare(),
+
+                                    img.getDataModificare()
+
+
                             ))
                             .collect(Collectors.toList());
 
@@ -344,7 +499,17 @@ public class PacientController {
                         img.getImageUrl(),
                         img.getNume(),
                         img.getTip(),
-                        img.getCloudinaryPublicId()
+                        img.getCloudinaryPublicId(),
+                        img.getAreTumoare(),
+                        img.getTipTumoare(),
+                        img.getConfidenta(),
+                        img.getDataAnalizei(),
+                        img.getStatusAnaliza(),
+                        img.getObservatii(),
+
+                        img.getDataIncarcare(),
+
+                        img.getDataModificare()
                 ))
                 .collect(Collectors.toList());
 
@@ -374,13 +539,23 @@ public class PacientController {
         }
 
         List<ImagineDto> imagineDTOList = imagini.stream()
-                .map(image -> new ImagineDto(
-                        image.getId(),
-                        image.getPacientId(),
-                        image.getImageUrl(),
-                        image.getNume(),
-                        image.getTip(),
-                        image.getCloudinaryPublicId()
+                .map(img -> new ImagineDto(
+                        img.getId(),
+                        img.getPacientId(),
+                        img.getImageUrl(),
+                        img.getNume(),
+                        img.getTip(),
+                        img.getCloudinaryPublicId(),
+                        img.getAreTumoare(),
+                        img.getTipTumoare(),
+                        img.getConfidenta(),
+                        img.getDataAnalizei(),
+                        img.getStatusAnaliza(),
+                        img.getObservatii(),
+
+                        img.getDataIncarcare(),
+
+                        img.getDataModificare()
                 ))
                 .collect(Collectors.toList());
 
