@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class AuthenticationResponse {
     private String jwt;
-    private Long id;
+
+    private String id;
     private String nume;
 }

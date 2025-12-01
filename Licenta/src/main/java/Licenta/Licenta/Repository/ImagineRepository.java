@@ -1,20 +1,14 @@
 package Licenta.Licenta.Repository;
 
 import Licenta.Licenta.Model.Imagine;
-import Licenta.Licenta.Model.User;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ImagineRepository extends JpaRepository<Imagine, Integer> {
-   List<Imagine> findByUserId(Long userId);
-
-   Optional<Imagine> findByImagineAndUser(byte[] imagine, User user);
-  // Optional <Imagine> findByUserAndId(User user,Long imagineId);
-   Optional<Imagine> findByUserIdAndId(Long idUser, Long id);
-   Optional<Imagine> findById(Long id);
-   Optional<Imagine> findFirstByUserId(Long userId);
+public interface ImagineRepository extends MongoRepository<Imagine, String> {
+    List<Imagine> findByPacientId(String pacientId);
+    Optional<Imagine> findByPacientIdAndId(String pacientId, String id);
 }

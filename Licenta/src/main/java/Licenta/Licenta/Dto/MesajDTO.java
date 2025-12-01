@@ -10,11 +10,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MesajDTO {
-    private Long id;
-    private Long expeditorId;
+    private String id;
+    private String expeditorId;
     private String expeditorNume;
     private String expeditorPrenume;
-    private Long destinatarId;
+    private String destinatarId;
     private String destinatarNume;
     private String destinatarPrenume;
     private String continut;

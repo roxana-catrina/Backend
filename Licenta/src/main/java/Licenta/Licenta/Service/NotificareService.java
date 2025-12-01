@@ -1,6 +1,5 @@
 package Licenta.Licenta.Service;
 
-
 import Licenta.Licenta.Dto.NotificareDTO;
 import Licenta.Licenta.Model.Mesaj;
 import Licenta.Licenta.Model.Notificare;
@@ -23,95 +22,94 @@ public class NotificareService {
     @Autowired
     private NotificareRepository notificareRepository;
 
-    public List<NotificareDTO> getNotificariByUserId(Long userId) {
-        return notificareRepository.findByUserId(userId)
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
+    public List<NotificareDTO> getNotificariByUserId(String userId) {
+        return notificareRepository.findByUserIdOrderByDataCreareDesc(userId)
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
-    public List<NotificareDTO> getNotificariNecititeByUserId(Long userId) {
-        return notificareRepository.findUnreadByUserId(userId)
+    public List<NotificareDTO> getNotificariNecititeByUserId(String userId) {
+        return notificareRepository.findByUserIdAndCititOrderByDataCreareDesc(userId, false)
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
-    public Long countNotificariNecitite(Long userId) {
-        return notificareRepository.countUnreadByUserId(userId);
+    public Long countNotificariNecitite(String userId) {
+        return notificareRepository.countByUserIdAndCitit(userId, false);
     }
 
-    public void marcheazaCaCitita(Long notificareId) {
+    public void marcheazaCaCitita(String notificareId) {
         Notificare notificare = notificareRepository.findById(notificareId)
                 .orElseThrow(() -> new RuntimeException("Notificare not found"));
         notificare.setCitit(true);
         notificareRepository.save(notificare);
     }
 
-    public void marcheazaToateCaCitite(Long userId) {
-        notificareRepository.markAllAsReadByUserId(userId);
+    public void marcheazaToateCaCitite(String userId) {
+        List<Notificare> notificari = notificareRepository.findByUserIdAndCititOrderByDataCreareDesc(userId, false);
+        notificari.forEach(n -> n.setCitit(true));
+        notificareRepository.saveAll(notificari);
     }
 
-    public void stergeNotificare(Long notificareId) {
+    public void stergeNotificare(String notificareId) {
         notificareRepository.deleteById(notificareId);
     }
 
-    public void stergeToateNotificarileUserId(Long userId) {
-        List<Notificare> notificari = notificareRepository.findByUserId(userId);
+    public void stergeToateNotificarileUserId(String userId) {
+        List<Notificare> notificari = notificareRepository.findByUserIdOrderByDataCreareDesc(userId);
         notificareRepository.deleteAll(notificari);
     }
 
     // Șterge notificări mai vechi de 30 zile
     public void stergeNotificariVechi() {
         LocalDateTime dataLimita = LocalDateTime.now().minusDays(30);
-        notificareRepository.deleteOldNotifications(dataLimita);
+        notificareRepository.deleteByUserIdAndCititAndDataCreareBefore(null, true, dataLimita);
     }
 
     private NotificareDTO convertToDTO(Notificare notificare) {
         NotificareDTO dto = new NotificareDTO();
         dto.setId(notificare.getId());
-        dto.setUserId(notificare.getUser().getId());
+        dto.setUserId(notificare.getUserId());
         dto.setTip(notificare.getTip());
         dto.setContinut(notificare.getContinut());
         dto.setCitit(notificare.getCitit());
         dto.setDataCreare(notificare.getDataCreare());
 
-        if (notificare.getMesaj() != null) {
-            dto.setMesajId(notificare.getMesaj().getId());
-            dto.setExpeditorId(notificare.getMesaj().getExpeditor().getId());
-            dto.setExpeditorNume(notificare.getMesaj().getExpeditor().getNume());
-            dto.setExpeditorPrenume(notificare.getMesaj().getExpeditor().getPrenume());
+        if (notificare.getMesajId() != null) {
+            dto.setMesajId(notificare.getMesajId());
+            // Note: expeditorId, expeditorNume, expeditorPrenume would need to be fetched separately if needed
         }
 
         return dto;
     }
 
-
-
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
-
-    public void creeazaNotificareMesaj(User destinatar, Mesaj mesaj) {
+    public void creeazaNotificareMesaj(User destinatar, Mesaj mesaj, User expeditor) {
         Notificare notificare = new Notificare();
-        notificare.setUser(destinatar);
+        notificare.setUserId(destinatar.getId());
         notificare.setTip("MESAJ_NOU");
-        notificare.setMesaj(mesaj);
+        notificare.setMesajId(mesaj.getId());
         notificare.setContinut("Mesaj nou de la " +
-                mesaj.getExpeditor().getPrenume() + " " +
-                mesaj.getExpeditor().getNume());
+                expeditor.getPrenume() + " " +
+                expeditor.getNume());
         notificare.setCitit(false);
+        notificare.onCreate(); // Set timestamp
 
         notificareRepository.save(notificare);
 
         // Trimite notificare în timp real
         messagingTemplate.convertAndSendToUser(
-                destinatar.getId().toString(),
+                destinatar.getId(),
                 "/queue/notifications",
                 Map.of(
                         "tip", "MESAJ_NOU",
                         "continut", notificare.getContinut(),
                         "mesajId", mesaj.getId(),
-                        "expeditorId", mesaj.getExpeditor().getId()
+                        "expeditorId", expeditor.getId()
                 )
         );
     }

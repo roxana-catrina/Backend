@@ -46,7 +46,7 @@ public class ProgramareController {
 
     @GetMapping("/user/{userId}/month")
     public ResponseEntity<List<Programare>> getByMonth(
-            @PathVariable Long userId,
+            @PathVariable String userId,
             @RequestParam int year,
             @RequestParam int month) {
         log.info("GET /api/programari/user/{}/month?year={}&month={}", userId, year, month);
@@ -56,7 +56,7 @@ public class ProgramareController {
     }
 
     @GetMapping("/user/{userId}/upcoming")
-    public ResponseEntity<List<Programare>> getUpcoming(@PathVariable Long userId) {
+    public ResponseEntity<List<Programare>> getUpcoming(@PathVariable String userId) {
         log.info("GET /api/programari/user/{}/upcoming", userId);
         List<Programare> programari = programareService.getProgramariViitoareByDoctor(userId);
         log.info("Returning {} programari", programari.size());
@@ -65,13 +65,13 @@ public class ProgramareController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Programare> update(@PathVariable Long id, @RequestBody ProgramareDTO dto) {
+    public ResponseEntity<Programare> update(@PathVariable String id, @RequestBody ProgramareDTO dto) {
         Programare programare = programareService.updateProgramare(id, dto);
         return ResponseEntity.ok(programare);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable String id) {
         programareService.deleteProgramare(id);
         return ResponseEntity.noContent().build();
     }

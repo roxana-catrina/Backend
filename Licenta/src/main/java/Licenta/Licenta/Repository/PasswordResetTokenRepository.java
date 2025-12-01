@@ -1,29 +1,25 @@
 package Licenta.Licenta.Repository;
 
-
-
 import Licenta.Licenta.Model.PasswordResetToken;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
-public interface PasswordResetTokenRepository extends JpaRepository<PasswordResetToken, Long> {
+public interface PasswordResetTokenRepository extends MongoRepository<PasswordResetToken, String> {
 
     Optional<PasswordResetToken> findByEmailAndCodeAndUsedFalse(String email, String code);
 
     Optional<PasswordResetToken> findTopByEmailOrderByExpiryDateDesc(String email);
 
-    @Modifying
-    @Query("DELETE FROM PasswordResetToken p WHERE p.expiryDate < :dateTime")
-    void deleteByExpiryDateBefore(@Param("dateTime") LocalDateTime dateTime);
+    // Delete expired tokens
+    void deleteByExpiryDateBefore(LocalDateTime date);
 
-    @Modifying
-    @Query("DELETE FROM PasswordResetToken p WHERE p.email = :email")
-    void deleteByEmail(@Param("email") String email);
+    // Delete used tokens
+    void deleteByUsedTrue();
+
+    // Delete by email
+    void deleteByEmail(String email);
 }

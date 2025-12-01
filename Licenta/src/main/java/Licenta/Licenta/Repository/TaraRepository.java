@@ -1,12 +1,11 @@
 package Licenta.Licenta.Repository;
 
 import Licenta.Licenta.Model.Tara;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface TaraRepository extends JpaRepository<Tara,Long> {
-Tara findByPrefix(String prefix);
-
+public interface TaraRepository extends MongoRepository<Tara, String> {
+    Tara findByPrefix(String prefix);
+    Tara findByCod(String cod);
 }

@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProgramareDTO {
-    private Long userId;
+    private String pacientId;
     private String pacientNume;
     private String pacientPrenume;
     private String pacientCnp;
