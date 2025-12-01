@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/mesaje")
@@ -19,13 +20,59 @@ public class MesajController {
 
     // Trimite mesaj
     @PostMapping("/trimite")
-    public ResponseEntity<MesajDTO> trimiteMesaj(@RequestBody MesajRequest request) {
-        MesajDTO mesaj = mesajService.trimiteMesaj(
-                request.getExpeditorId(),
-                request.getDestinatarId(),
-                request.getContinut()
-        );
-        return ResponseEntity.ok(mesaj);
+    public ResponseEntity<?> trimiteMesaj(@RequestBody MesajRequest request) {
+        System.out.println("\n=========================================");
+        System.out.println("=== MESAJ CONTROLLER - TRIMITE MESAJ ===");
+        System.out.println("=========================================");
+        System.out.println("Request primit: " + request);
+        System.out.println("expeditorId: '" + request.getExpeditorId() + "' (length: " +
+            (request.getExpeditorId() != null ? request.getExpeditorId().length() : "null") + ")");
+        System.out.println("destinatarId: '" + request.getDestinatarId() + "' (length: " +
+            (request.getDestinatarId() != null ? request.getDestinatarId().length() : "null") + ")");
+        System.out.println("continut: '" + request.getContinut() + "'");
+
+        // Validare rapidă
+        if (request.getExpeditorId() == null || request.getExpeditorId().trim().isEmpty()) {
+            System.err.println("❌ EROARE: expeditorId este NULL sau EMPTY!");
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "expeditorId este obligatoriu și nu poate fi gol",
+                "expeditorId", request.getExpeditorId()
+            ));
+        }
+
+        if (request.getDestinatarId() == null || request.getDestinatarId().trim().isEmpty()) {
+            System.err.println("❌ EROARE: destinatarId este NULL sau EMPTY!");
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "destinatarId este obligatoriu și nu poate fi gol",
+                "destinatarId", request.getDestinatarId()
+            ));
+        }
+
+        try {
+            MesajDTO mesaj = mesajService.trimiteMesaj(
+                    request.getExpeditorId(),
+                    request.getDestinatarId(),
+                    request.getContinut()
+            );
+            System.out.println("✅ Mesaj trimis cu succes!");
+            System.out.println("=========================================\n");
+            return ResponseEntity.ok(mesaj);
+        } catch (RuntimeException e) {
+            System.err.println("\n❌❌❌ EROARE la trimiterea mesajului ❌❌❌");
+            System.err.println("Mesaj eroare: " + e.getMessage());
+            System.err.println("expeditorId care a cauzat eroarea: '" + request.getExpeditorId() + "'");
+            System.err.println("destinatarId care a cauzat eroarea: '" + request.getDestinatarId() + "'");
+            e.printStackTrace();
+            System.err.println("=========================================\n");
+
+            // Returnează eroare clară către frontend
+            return ResponseEntity.status(400).body(Map.of(
+                "error", e.getMessage(),
+                "expeditorId", request.getExpeditorId() != null ? request.getExpeditorId() : "null",
+                "destinatarId", request.getDestinatarId() != null ? request.getDestinatarId() : "null",
+                "hint", "Verifică că utilizatorul cu acest ID există în baza de date MongoDB"
+            ));
+        }
     }
 
     // Obține conversația între doi utilizatori

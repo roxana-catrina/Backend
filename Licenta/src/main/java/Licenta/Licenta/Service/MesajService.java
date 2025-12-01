@@ -34,10 +34,28 @@ public class MesajService {
 
     // Trimite mesaj
     public MesajDTO trimiteMesaj(String expeditorId, String destinatarId, String continut) {
+        // Log pentru debugging
+        System.out.println("=== TRIMITE MESAJ ===");
+        System.out.println("expeditorId: '" + expeditorId + "' (type: " + (expeditorId != null ? expeditorId.getClass().getName() : "null") + ")");
+        System.out.println("destinatarId: '" + destinatarId + "' (type: " + (destinatarId != null ? destinatarId.getClass().getName() : "null") + ")");
+        System.out.println("continut: '" + continut + "'");
+
+        // Validate input
+        if (expeditorId == null || expeditorId.trim().isEmpty() || "null".equals(expeditorId) || "undefined".equals(expeditorId)) {
+            throw new RuntimeException("Invalid expeditorId: " + expeditorId);
+        }
+        if (destinatarId == null || destinatarId.trim().isEmpty() || "null".equals(destinatarId) || "undefined".equals(destinatarId)) {
+            throw new RuntimeException("Invalid destinatarId: " + destinatarId);
+        }
+
+        // Find users with better error messages
         User expeditor = userRepository.findById(expeditorId)
-                .orElseThrow(() -> new RuntimeException("Expeditor not found"));
+                .orElseThrow(() -> new RuntimeException("Expeditor not found with ID: '" + expeditorId + "'. Please check if this user exists in the database."));
         User destinatar = userRepository.findById(destinatarId)
-                .orElseThrow(() -> new RuntimeException("Destinatar not found"));
+                .orElseThrow(() -> new RuntimeException("Destinatar not found with ID: '" + destinatarId + "'. Please check if this user exists in the database."));
+
+        System.out.println("Expeditor găsit: " + expeditor.getEmail());
+        System.out.println("Destinatar găsit: " + destinatar.getEmail());
 
         Mesaj mesaj = new Mesaj();
         mesaj.setExpeditorId(expeditorId);
@@ -47,6 +65,7 @@ public class MesajService {
         mesaj.onCreate(); // Set timestamp
 
         Mesaj savedMesaj = mesajRepository.save(mesaj);
+        System.out.println("Mesaj salvat cu ID: " + savedMesaj.getId());
 
         // Trimite notificare prin WebSocket
         MesajDTO mesajDTO = convertToDTO(savedMesaj, expeditor, destinatar);
