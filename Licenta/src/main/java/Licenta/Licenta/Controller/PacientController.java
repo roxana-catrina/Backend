@@ -57,8 +57,14 @@ public class PacientController {
             @RequestParam(value = "data_nasterii", required = false, defaultValue = "") String dataNasterii,
             @RequestParam(value = "istoric_medical", required = false, defaultValue = "") String istoricMedical) {
 
+        System.out.println("=== CREATE PACIENT REQUEST ===");
+        System.out.println("User ID: " + userId);
+        System.out.println("File present: " + (file != null && !file.isEmpty()));
+        System.out.println("Nume pacient: " + numePacient);
+
         Optional<User> userOptional = userRepository.findById(userId);
         if (userOptional.isEmpty()) {
+            System.out.println("User not found!");
             return ResponseEntity.notFound().build();
         }
 
