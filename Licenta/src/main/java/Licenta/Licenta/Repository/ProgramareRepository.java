@@ -2,26 +2,28 @@ package Licenta.Licenta.Repository;
 
 import Licenta.Licenta.Model.Programare;
 import Licenta.Licenta.Model.StatusProgramare;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface ProgramareRepository extends JpaRepository<Programare, Long> {
-    // Find by pacient (Imagine) id
+@Repository
+public interface ProgramareRepository extends MongoRepository<Programare, String> {
+    // Find by pacient id
     List<Programare> findByPacientIdAndDataProgramareBetween(
-            Long pacientId, LocalDateTime start, LocalDateTime end);
+            String pacientId, LocalDateTime start, LocalDateTime end);
 
     List<Programare> findByPacientIdAndStatusIn(
-            Long pacientId, List<StatusProgramare> statuses);
+            String pacientId, List<StatusProgramare> statuses);
 
     List<Programare> findByPacientIdAndDataProgramareAfterOrderByDataProgramareAsc(
-            Long pacientId, LocalDateTime now);
+            String pacientId, LocalDateTime now);
 
-    // Find by doctor (User) id through pacient.user relationship
-    List<Programare> findByPacientUserIdAndDataProgramareBetween(
-            Long userId, LocalDateTime start, LocalDateTime end);
+    // Find by date range
+    List<Programare> findByDataProgramareBetweenOrderByDataProgramareAsc(
+            LocalDateTime start, LocalDateTime end);
 
-    List<Programare> findByPacientUserIdAndDataProgramareAfterOrderByDataProgramareAsc(
-            Long userId, LocalDateTime now);
+    // Find by status
+    List<Programare> findByStatusOrderByDataProgramareAsc(StatusProgramare status);
 }

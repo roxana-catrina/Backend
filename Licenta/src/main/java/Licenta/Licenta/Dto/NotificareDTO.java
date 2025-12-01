@@ -10,16 +10,16 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class NotificareDTO {
-    private Long id;
-    private Long userId;
+    private String id;
+    private String userId;
     private String tip;
-    private Long mesajId;
+    private String mesajId;
     private String continut;
     private Boolean citit;
     private LocalDateTime dataCreare;
 
     // Info despre expeditor (pentru notificări de mesaje)
-    private Long expeditorId;
+    private String expeditorId;
     private String expeditorNume;
     private String expeditorPrenume;
 }

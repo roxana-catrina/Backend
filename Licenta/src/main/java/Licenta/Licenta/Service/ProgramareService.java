@@ -1,10 +1,10 @@
 package Licenta.Licenta.Service;
 
 import Licenta.Licenta.Dto.ProgramareDTO;
-import Licenta.Licenta.Model.Imagine;
+import Licenta.Licenta.Model.Pacient;
 import Licenta.Licenta.Model.Programare;
 import Licenta.Licenta.Model.StatusProgramare;
-import Licenta.Licenta.Repository.ImagineRepository;
+import Licenta.Licenta.Repository.PacientRepository;
 import Licenta.Licenta.Repository.ProgramareRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,24 +20,24 @@ import java.util.List;
 public class ProgramareService {
 
     private final ProgramareRepository programareRepository;
-    private final ImagineRepository imagineRepository;
+    private final PacientRepository pacientRepository;
 
     public Programare createProgramare(ProgramareDTO dto) {
-        log.info("Creating programare for userId: {}", dto.getUserId());
+        log.info("Creating programare for pacientId: {}", dto.getPacientId());
 
-        // Fetch the pacient (Imagine) first
-        Imagine pacient = imagineRepository.findFirstByUserId(dto.getUserId())
+        // Fetch the pacient first
+        Pacient pacient = pacientRepository.findById(dto.getPacientId())
                 .orElseThrow(() -> {
-                    log.error("Pacient not found with id: {}", dto.getUserId());
-                    return new RuntimeException("Pacient not found with id: " + dto.getUserId());
+                    log.error("Pacient not found with id: {}", dto.getPacientId());
+                    return new RuntimeException("Pacient not found with id: " + dto.getPacientId());
                 });
 
         log.info("Found pacient: {} {}", pacient.getNumePacient(), pacient.getPrenumePacient());
 
-        // Create Programare using constructor
+        // Create Programare
         Programare programare = new Programare(
                 null,  // id
-                pacient,  // pacient
+                pacient.getId(),  // pacient ID
                 dto.getPacientNume(),
                 dto.getPacientPrenume(),
                 dto.getPacientCnp(),
@@ -52,7 +52,8 @@ public class ProgramareService {
         log.info("Programare created successfully with id: {}", saved.getId());
         return saved;
     }
-    public List<Programare> getProgramariByMonth(Long pacientId, int year, int month) {
+
+    public List<Programare> getProgramariByMonth(String pacientId, int year, int month) {
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDateTime start = yearMonth.atDay(1).atStartOfDay();
         LocalDateTime end = yearMonth.atEndOfMonth().atTime(23, 59, 59);
@@ -60,7 +61,7 @@ public class ProgramareService {
         return programareRepository.findByPacientIdAndDataProgramareBetween(pacientId, start, end);
     }
 
-    public List<Programare> getProgramariViitoare(Long pacientId) {
+    public List<Programare> getProgramariViitoare(String pacientId) {
         log.info("Getting upcoming programari for pacientId: {}", pacientId);
         LocalDateTime now = LocalDateTime.now();
         List<Programare> programari = programareRepository
@@ -70,28 +71,39 @@ public class ProgramareService {
     }
 
     // Methods for doctor (User) - get all programari for their patients
-    public List<Programare> getProgramariByDoctorAndMonth(Long userId, int year, int month) {
+    public List<Programare> getProgramariByDoctorAndMonth(String userId, int year, int month) {
         log.info("Getting programari for doctor userId: {} in {}/{}", userId, year, month);
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDateTime start = yearMonth.atDay(1).atStartOfDay();
         LocalDateTime end = yearMonth.atEndOfMonth().atTime(23, 59, 59);
 
-        List<Programare> programari = programareRepository
-                .findByPacientUserIdAndDataProgramareBetween(userId, start, end);
-        log.info("Found {} programari for doctor", programari.size());
-        return programari;
+        // Get all pacienti for this user
+        List<Pacient> pacienti = pacientRepository.findByUserId(userId);
+        List<String> pacientIds = pacienti.stream().map(Pacient::getId).toList();
+
+        // Get programari for all pacienti in the date range
+        return programareRepository.findByDataProgramareBetweenOrderByDataProgramareAsc(start, end)
+                .stream()
+                .filter(p -> pacientIds.contains(p.getPacientId()))
+                .toList();
     }
 
-    public List<Programare> getProgramariViitoareByDoctor(Long userId) {
+    public List<Programare> getProgramariViitoareByDoctor(String userId) {
         log.info("Getting upcoming programari for doctor userId: {}", userId);
         LocalDateTime now = LocalDateTime.now();
-        List<Programare> programari = programareRepository
-                .findByPacientUserIdAndDataProgramareAfterOrderByDataProgramareAsc(userId, now);
-        log.info("Found {} upcoming programari for doctor", programari.size());
-        return programari;
+
+        // Get all pacienti for this user
+        List<Pacient> pacienti = pacientRepository.findByUserId(userId);
+        List<String> pacientIds = pacienti.stream().map(Pacient::getId).toList();
+
+        // Get all future programari and filter by pacient IDs
+        return programareRepository.findByDataProgramareBetweenOrderByDataProgramareAsc(now, now.plusYears(1))
+                .stream()
+                .filter(p -> pacientIds.contains(p.getPacientId()))
+                .toList();
     }
 
-    public Programare updateProgramare(Long id, ProgramareDTO dto) {
+    public Programare updateProgramare(String id, ProgramareDTO dto) {
         Programare programare = programareRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Programare not found with id: " + id));
 
@@ -106,14 +118,14 @@ public class ProgramareService {
         return programareRepository.save(programare);
     }
 
-    public void deleteProgramare(Long id) {
+    public void deleteProgramare(String id) {
         if (!programareRepository.existsById(id)) {
             throw new RuntimeException("Programare not found with id: " + id);
         }
         programareRepository.deleteById(id);
     }
 
-    public Programare updateStatus(Long id, StatusProgramare status) {
+    public Programare updateStatus(String id, StatusProgramare status) {
         Programare programare = programareRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Programare not found with id: " + id));
 

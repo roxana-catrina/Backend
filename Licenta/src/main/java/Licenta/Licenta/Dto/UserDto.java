@@ -1,16 +1,12 @@
 package Licenta.Licenta.Dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 
 import java.time.LocalDate;
 
 public class UserDto {
 
-    private  String email;
+    private String email;
 
 
     private String parola;

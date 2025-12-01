@@ -3,10 +3,10 @@ package Licenta.Licenta.Service;
 
 import Licenta.Licenta.Model.User;
 import Licenta.Licenta.Repository.UserRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,27 +34,25 @@ public class UserService {
     }
 
     @Transactional
-    public User getUserById(Long id) {
-        Optional<User> optionalUser = userRepository.findById(id.toString());
+    public User getUserById(String id) {
+        Optional<User> optionalUser = userRepository.findById(id);
         if (optionalUser.isPresent()) {
             return optionalUser.get();
         } else {
             return null;
         }
     }
-    public User updateUser(Long userId, User user){
 
-                 return userRepository.save(user);
-
+    public User updateUser(String userId, User user) {
+        return userRepository.save(user);
     }
-
 
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
     }
 
-    public void deleteUser(Long id){
-        userRepository.deleteById(id.toString());
+    public void deleteUser(String id) {
+        userRepository.deleteById(id);
     }
 
 }

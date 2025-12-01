@@ -1,44 +1,36 @@
 package Licenta.Licenta.Model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "mesaje")
+@Document(collection = "mesaje")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Mesaj {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @ManyToOne
-    @JoinColumn(name = "expeditor_id", nullable = false)
-    private User expeditor;
+    private String expeditorId; // Reference to User ID
 
-    @ManyToOne
-    @JoinColumn(name = "destinatar_id", nullable = false)
-    private User destinatar;
+    private String destinatarId; // Reference to User ID
 
-    @Column(nullable = false, columnDefinition = "TEXT")
     private String continut;
 
-    @Column(name = "data_trimitere")
     private LocalDateTime dataTrimitere;
 
-    @Column(nullable = false)
     private Boolean citit = false;
 
-    @Column(name = "data_citire")
     private LocalDateTime dataCitire;
 
-    @PrePersist
-    protected void onCreate() {
-        dataTrimitere = LocalDateTime.now();
+    public void onCreate() {
+        if (dataTrimitere == null) {
+            dataTrimitere = LocalDateTime.now();
+        }
     }
 }

@@ -2,9 +2,8 @@ package Licenta.Licenta.Service;
 
 import Licenta.Licenta.Model.Imagine;
 import Licenta.Licenta.Repository.ImagineRepository;
-import Licenta.Licenta.Repository.UserRepository;
+import Licenta.Licenta.Repository.PacientRepository;
 import lombok.AllArgsConstructor;
-import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,22 +17,25 @@ public class ImagineService {
     private ImagineRepository imagineRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private PacientRepository pacientRepository;
 
-   public List<Imagine> getAllImaginIByIdUser(Long idUser){
-        List<Imagine> imagini= imagineRepository.findByUserId(idUser);
-        return imagini;
+    public List<Imagine> getAllImaginiByPacientId(String pacientId) {
+        return imagineRepository.findByPacientId(pacientId);
+    }
 
+    public Optional<Imagine> findByPacientIdAndId(String pacientId, String imagineId) {
+        return imagineRepository.findByPacientIdAndId(pacientId, imagineId);
     }
-    public boolean deteleImagineByImagineAndUser(byte[] imagine, Long idUser){
-        Optional<Imagine> image = imagineRepository.findByImagineAndUser( imagine,userRepository.findById(idUser).get());
-        if (image.isPresent()) {
-            imagineRepository.delete(image.get());
-            return true;
-        }
-        return false;
+
+    public Imagine saveImagine(Imagine imagine) {
+        return imagineRepository.save(imagine);
     }
-    public Optional <Imagine> findByUserIdAndId(Long userId, Long imagineId){
-       return imagineRepository.findByUserIdAndId(userId,imagineId);
+
+    public void deleteImagine(Imagine imagine) {
+        imagineRepository.delete(imagine);
     }
+
+    public Optional<Imagine> findById(String id) {
+        return imagineRepository.findById(id);
     }
+}

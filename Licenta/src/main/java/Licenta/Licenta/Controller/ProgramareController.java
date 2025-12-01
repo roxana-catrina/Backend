@@ -45,33 +45,62 @@ public class ProgramareController {
     }
 
     @GetMapping("/user/{userId}/month")
-    public ResponseEntity<List<Programare>> getByMonth(
-            @PathVariable Long userId,
+    public ResponseEntity<?> getByMonth(
+            @PathVariable String userId,
             @RequestParam int year,
             @RequestParam int month) {
         log.info("GET /api/programari/user/{}/month?year={}&month={}", userId, year, month);
-        List<Programare> programari = programareService.getProgramariByDoctorAndMonth(userId, year, month);
-        log.info("Returning {} programari for doctor", programari.size());
-        return ResponseEntity.ok(programari);
+        log.debug("Received userId type: {}, value: '{}'", userId.getClass().getName(), userId);
+
+        // Validate userId
+        if (userId == null || userId.trim().isEmpty() || "null".equals(userId) || "undefined".equals(userId)) {
+            log.error("Invalid userId received: '{}'", userId);
+            return ResponseEntity.badRequest()
+                    .body(new ErrorResponse("Invalid userId: " + userId));
+        }
+
+        try {
+            List<Programare> programari = programareService.getProgramariByDoctorAndMonth(userId, year, month);
+            log.info("Returning {} programari for doctor with userId: {}", programari.size(), userId);
+            return ResponseEntity.ok(programari);
+        } catch (Exception e) {
+            log.error("Error fetching programari for userId: {}", userId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Error fetching programari: " + e.getMessage()));
+        }
     }
 
     @GetMapping("/user/{userId}/upcoming")
-    public ResponseEntity<List<Programare>> getUpcoming(@PathVariable Long userId) {
+    public ResponseEntity<?> getUpcoming(@PathVariable String userId) {
         log.info("GET /api/programari/user/{}/upcoming", userId);
-        List<Programare> programari = programareService.getProgramariViitoareByDoctor(userId);
-        log.info("Returning {} programari", programari.size());
-        return ResponseEntity.ok(programari);
+        log.debug("Received userId type: {}, value: '{}'", userId.getClass().getName(), userId);
 
+        // Validate userId
+        if (userId == null || userId.trim().isEmpty() || "null".equals(userId) || "undefined".equals(userId)) {
+            log.error("Invalid userId received: '{}'", userId);
+            return ResponseEntity.badRequest()
+                    .body(new ErrorResponse("Invalid userId: " + userId));
+        }
+
+        try {
+            List<Programare> programari = programareService.getProgramariViitoareByDoctor(userId);
+            log.info("Returning {} upcoming programari for userId: {}", programari.size(), userId);
+            return ResponseEntity.ok(programari);
+        } catch (Exception e) {
+            log.error("Error fetching upcoming programari for userId: {}", userId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Error fetching programari: " + e.getMessage()));
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Programare> update(@PathVariable Long id, @RequestBody ProgramareDTO dto) {
+    public ResponseEntity<Programare> update(@PathVariable String id, @RequestBody ProgramareDTO dto) {
         Programare programare = programareService.updateProgramare(id, dto);
         return ResponseEntity.ok(programare);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable String id) {
         programareService.deleteProgramare(id);
         return ResponseEntity.noContent().build();
     }

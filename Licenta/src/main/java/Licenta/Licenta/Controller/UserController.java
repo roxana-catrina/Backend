@@ -71,17 +71,16 @@ public class UserController {
         return  userService.getAllUsers();
     }
     @GetMapping("/user/{id}")
-    public ResponseEntity<User>  getUserById(@PathVariable Long id){
-        User user = new User();
-        user=userService.getUserById(id);
-        if(user!=null)
+    public ResponseEntity<User> getUserById(@PathVariable String id) {
+        User user = userService.getUserById(id);
+        if (user != null)
             return ResponseEntity.ok(user);
         else
             return ResponseEntity.notFound().build();
     }
 
     @PutMapping("/user/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
+    public ResponseEntity<User> updateUser(@PathVariable String id, @RequestBody User user) {
         // Găsim utilizatorul în baza de date
         User existingUser = userService.getUserById(id);
 
@@ -103,17 +102,18 @@ public class UserController {
         existingUser.setTara(user.getTara());
         existingUser.setNumar_telefon(user.getNumar_telefon());
 
-        // Salvăm utilizatorul actualizat (use the correct id variable)
+        // Salvăm utilizatorul actualizat
         User updatedUser = userService.updateUser(id, existingUser);
         return ResponseEntity.ok(updatedUser);
     }
+
     @DeleteMapping("/user/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        User existingUser= userService.getUserById(id);
-        if(existingUser!=null){
+    public ResponseEntity<?> deleteUser(@PathVariable String id) {
+        User existingUser = userService.getUserById(id);
+        if (existingUser != null) {
             userService.deleteUser(id);
             return ResponseEntity.ok().build();
-        }else{
+        } else {
             return ResponseEntity.notFound().build();
         }
     }
@@ -149,7 +149,7 @@ public class UserController {
 
     @PostMapping("/user/{userId}/profile-photo")
     public ResponseEntity<?> uploadProfilePhoto(
-            @PathVariable Long userId,
+            @PathVariable String userId,
             @RequestParam("profilePhoto") MultipartFile file) {
 
         try {
@@ -218,7 +218,7 @@ public class UserController {
         }
     }
     @DeleteMapping("/user/{userId}/profile-photo")
-    public ResponseEntity<?> deleteProfilePhoto(@PathVariable Long userId) {
+    public ResponseEntity<?> deleteProfilePhoto(@PathVariable String userId) {
         try {
             User user = userService.getUserById(userId);
 
@@ -255,7 +255,7 @@ public class UserController {
     }
 
     @GetMapping("/user/{userId}/profile-photo")
-    public ResponseEntity<?> getProfilePhoto(@PathVariable Long userId) {
+    public ResponseEntity<?> getProfilePhoto(@PathVariable String userId) {
         try {
             User user = userService.getUserById(userId);
 

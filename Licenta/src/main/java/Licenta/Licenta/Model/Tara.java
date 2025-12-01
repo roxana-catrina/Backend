@@ -1,21 +1,18 @@
 package Licenta.Licenta.Model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import lombok.Data;
 
-@Entity
+@Document(collection = "tari")
 @Data
-@Table(name="tari")
 public class Tara {
-    @Id@GeneratedValue(strategy = GenerationType.IDENTITY)
-    private  Long  id;
+    @Id
+    private String id;
 
-    @Column(name="nume")
     private String nume;
 
-    @Column(name="cod")
     private String cod;
 
-    @Column(name="prefix")
     private String prefix;
 }
