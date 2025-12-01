@@ -34,27 +34,25 @@ public class UserService {
     }
 
     @Transactional
-    public User getUserById(Long id) {
-        Optional<User> optionalUser = userRepository.findById(id.toString());
+    public User getUserById(String id) {
+        Optional<User> optionalUser = userRepository.findById(id);
         if (optionalUser.isPresent()) {
             return optionalUser.get();
         } else {
             return null;
         }
     }
-    public User updateUser(Long userId, User user){
 
+    public User updateUser(String userId, User user) {
         return userRepository.save(user);
-
     }
-
 
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
     }
 
-    public void deleteUser(Long id){
-        userRepository.deleteById(id.toString());
+    public void deleteUser(String id) {
+        userRepository.deleteById(id);
     }
 
 }

@@ -72,7 +72,7 @@ public class UserController {
     }
     @GetMapping("/user/{id}")
     public ResponseEntity<User> getUserById(@PathVariable String id) {
-        User user = userService.getUserById(Long.valueOf(id));
+        User user = userService.getUserById(id);
         if (user != null)
             return ResponseEntity.ok(user);
         else
@@ -82,7 +82,7 @@ public class UserController {
     @PutMapping("/user/{id}")
     public ResponseEntity<User> updateUser(@PathVariable String id, @RequestBody User user) {
         // Găsim utilizatorul în baza de date
-        User existingUser = userService.getUserById(Long.valueOf(id));
+        User existingUser = userService.getUserById(id);
 
         if (existingUser == null) {
             return ResponseEntity.notFound().build(); // 404 Not Found
@@ -102,16 +102,16 @@ public class UserController {
         existingUser.setTara(user.getTara());
         existingUser.setNumar_telefon(user.getNumar_telefon());
 
-        // Salvăm utilizatorul actualizat (use the correct id variable)
-        User updatedUser = userService.updateUser(Long.valueOf(id), existingUser);
+        // Salvăm utilizatorul actualizat
+        User updatedUser = userService.updateUser(id, existingUser);
         return ResponseEntity.ok(updatedUser);
     }
 
     @DeleteMapping("/user/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable String id) {
-        User existingUser = userService.getUserById(Long.valueOf(id));
+        User existingUser = userService.getUserById(id);
         if (existingUser != null) {
-            userService.deleteUser(Long.valueOf(id));
+            userService.deleteUser(id);
             return ResponseEntity.ok().build();
         } else {
             return ResponseEntity.notFound().build();
@@ -163,7 +163,7 @@ public class UserController {
                 return ResponseEntity.badRequest().body("Only image files are allowed");
             }
 
-            User user = userService.getUserById(Long.valueOf(userId));
+            User user = userService.getUserById(userId);
             if (user == null) {
                 return ResponseEntity.notFound().build();
             }
@@ -200,7 +200,7 @@ public class UserController {
 
             // Save Cloudinary URL to database
             user.setProfilePhotoUrl(imageUrl);
-            userService.updateUser(Long.valueOf(userId), user);
+            userService.updateUser(userId, user);
 
             Map<String, String> response = new HashMap<>();
             response.put("message", "Profile photo uploaded successfully");
@@ -220,7 +220,7 @@ public class UserController {
     @DeleteMapping("/user/{userId}/profile-photo")
     public ResponseEntity<?> deleteProfilePhoto(@PathVariable String userId) {
         try {
-            User user = userService.getUserById(Long.valueOf(userId));
+            User user = userService.getUserById(userId);
 
             if (user == null) {
                 return ResponseEntity.notFound().build();
@@ -242,7 +242,7 @@ public class UserController {
 
             // Remove URL from database
             user.setProfilePhotoUrl(null);
-            userService.updateUser(Long.valueOf(userId), user);
+            userService.updateUser(userId, user);
 
             Map<String, String> response = new HashMap<>();
             response.put("message", "Profile photo deleted successfully");
@@ -257,7 +257,7 @@ public class UserController {
     @GetMapping("/user/{userId}/profile-photo")
     public ResponseEntity<?> getProfilePhoto(@PathVariable String userId) {
         try {
-            User user = userService.getUserById(Long.valueOf(userId));
+            User user = userService.getUserById(userId);
 
             if (user == null || user.getProfilePhotoUrl() == null) {
                 return ResponseEntity.notFound().build();

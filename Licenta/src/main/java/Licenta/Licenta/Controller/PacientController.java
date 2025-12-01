@@ -42,19 +42,19 @@ public class PacientController {
     @Autowired
     private Cloudinary cloudinary;
 
-    // Create a new pacient with image
+    // Create a new pacient with optional image
     @PostMapping("/{userId}/pacient")
     public ResponseEntity<?> createPacient(
             @PathVariable String userId,
-            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "file", required = false) MultipartFile file,
             @RequestParam("nume_pacient") String numePacient,
             @RequestParam("prenume_pacient") String prenumePacient,
             @RequestParam("sex") Sex sex,
-            @RequestParam("detalii") String detalii,
+            @RequestParam(value = "detalii", required = false, defaultValue = "") String detalii,
             @RequestParam("cnp") String cnp,
             @RequestParam("numar_telefon") String numarTelefon,
-            @RequestParam("data_nasterii") String dataNasterii,
-            @RequestParam("istoric_medical") String istoricMedical) {
+            @RequestParam(value = "data_nasterii", required = false, defaultValue = "") String dataNasterii,
+            @RequestParam(value = "istoric_medical", required = false, defaultValue = "") String istoricMedical) {
 
         Optional<User> userOptional = userRepository.findById(userId);
         if (userOptional.isEmpty()) {
@@ -71,40 +71,175 @@ public class PacientController {
             pacient.setDetalii(detalii);
             pacient.setCnp(cnp);
             pacient.setNumarTelefon(numarTelefon);
-            if (!dataNasterii.isEmpty()) {
+            if (dataNasterii != null && !dataNasterii.isEmpty()) {
                 pacient.setDataNasterii(LocalDate.parse(dataNasterii));
             }
             pacient.setIstoricMedical(istoricMedical);
 
             Pacient savedPacient = pacientService.savePacient(pacient);
 
-            // Upload image to Cloudinary
-            File tempFile = File.createTempFile("temp-", file.getOriginalFilename());
-            file.transferTo(tempFile);
+            // Upload image to Cloudinary if file is provided
+            String imageUrl = null;
+            if (file != null && !file.isEmpty()) {
+                File tempFile = File.createTempFile("temp-", file.getOriginalFilename());
+                file.transferTo(tempFile);
 
-            Map uploadResult = cloudinary.uploader().upload(tempFile, ObjectUtils.emptyMap());
-            String imageUrl = (String) uploadResult.get("secure_url");
-            String publicId = (String) uploadResult.get("public_id");
+                Map uploadResult = cloudinary.uploader().upload(tempFile, ObjectUtils.emptyMap());
+                imageUrl = (String) uploadResult.get("secure_url");
+                String publicId = (String) uploadResult.get("public_id");
 
-            // Create and save Imagine
-            Imagine imagine = new Imagine();
-            imagine.setPacientId(savedPacient.getId());
-            imagine.setNume(file.getOriginalFilename());
+                // Create and save Imagine
+                Imagine imagine = new Imagine();
+                imagine.setPacientId(savedPacient.getId());
+                imagine.setNume(file.getOriginalFilename());
 
-            String contentType = file.getContentType();
-            if ("image/jpg".equals(contentType)) {
-                contentType = "image/jpeg";
+                String contentType = file.getContentType();
+                if ("image/jpg".equals(contentType)) {
+                    contentType = "image/jpeg";
+                }
+
+                imagine.setTip(contentType);
+                imagine.setImageUrl(imageUrl);
+                imagine.setCloudinaryPublicId(publicId);
+
+                imagineService.saveImagine(imagine);
+
+                tempFile.delete(); // Clean up temp file
             }
 
-            imagine.setTip(contentType);
-            imagine.setImageUrl(imageUrl);
-            imagine.setCloudinaryPublicId(publicId);
-
-            imagineService.saveImagine(imagine);
-
-            return ResponseEntity.ok(Map.of("pacientId", savedPacient.getId(), "imageUrl", imageUrl));
+            if (imageUrl != null) {
+                return ResponseEntity.ok(Map.of(
+                    "pacientId", savedPacient.getId(),
+                    "imageUrl", imageUrl,
+                    "message", "Pacient created successfully with image"
+                ));
+            } else {
+                return ResponseEntity.ok(Map.of(
+                    "pacientId", savedPacient.getId(),
+                    "message", "Pacient created successfully without image"
+                ));
+            }
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Upload failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Upload failed: " + e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error creating pacient: " + e.getMessage()));
+        }
+    }
+
+    // Create a new pacient without image (JSON body)
+    @PostMapping("/{userId}/pacient/simple")
+    public ResponseEntity<?> createPacientSimple(
+            @PathVariable String userId,
+            @RequestBody PacientDto pacientDto) {
+
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        try {
+            // Create and save Pacient
+            Pacient pacient = new Pacient();
+            pacient.setUserId(userId);
+            pacient.setNumePacient(pacientDto.getNumePacient());
+            pacient.setPrenumePacient(pacientDto.getPrenumePacient());
+            pacient.setSex(pacientDto.getSex());
+            pacient.setDetalii(pacientDto.getDetalii());
+            pacient.setCnp(pacientDto.getCnp());
+            pacient.setNumarTelefon(pacientDto.getNumarTelefon());
+            pacient.setDataNasterii(pacientDto.getDataNasterii());
+            pacient.setIstoricMedical(pacientDto.getIstoricMedical());
+
+            Pacient savedPacient = pacientService.savePacient(pacient);
+
+            return ResponseEntity.ok(Map.of(
+                "pacientId", savedPacient.getId(),
+                "message", "Pacient created successfully"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error creating pacient: " + e.getMessage()));
+        }
+    }
+
+    // Create pacient with JSON data + optional file
+    @PostMapping(value = "/{userId}/pacient/withdata", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> createPacientWithJsonData(
+            @PathVariable String userId,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam("pacientData") String pacientDataJson) {
+
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        try {
+            // Parse JSON data
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            mapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+            PacientDto pacientDto = mapper.readValue(pacientDataJson, PacientDto.class);
+
+            // Create and save Pacient
+            Pacient pacient = new Pacient();
+            pacient.setUserId(userId);
+            pacient.setNumePacient(pacientDto.getNumePacient());
+            pacient.setPrenumePacient(pacientDto.getPrenumePacient());
+            pacient.setSex(pacientDto.getSex());
+            pacient.setDetalii(pacientDto.getDetalii() != null ? pacientDto.getDetalii() : "");
+            pacient.setCnp(pacientDto.getCnp());
+            pacient.setNumarTelefon(pacientDto.getNumarTelefon());
+            pacient.setDataNasterii(pacientDto.getDataNasterii());
+            pacient.setIstoricMedical(pacientDto.getIstoricMedical() != null ? pacientDto.getIstoricMedical() : "");
+
+            Pacient savedPacient = pacientService.savePacient(pacient);
+
+            // Upload image to Cloudinary if file is provided
+            String imageUrl = null;
+            if (file != null && !file.isEmpty()) {
+                File tempFile = File.createTempFile("temp-", file.getOriginalFilename());
+                file.transferTo(tempFile);
+
+                Map uploadResult = cloudinary.uploader().upload(tempFile, ObjectUtils.emptyMap());
+                imageUrl = (String) uploadResult.get("secure_url");
+                String publicId = (String) uploadResult.get("public_id");
+
+                // Create and save Imagine
+                Imagine imagine = new Imagine();
+                imagine.setPacientId(savedPacient.getId());
+                imagine.setNume(file.getOriginalFilename());
+
+                String contentType = file.getContentType();
+                if ("image/jpg".equals(contentType)) {
+                    contentType = "image/jpeg";
+                }
+
+                imagine.setTip(contentType);
+                imagine.setImageUrl(imageUrl);
+                imagine.setCloudinaryPublicId(publicId);
+
+                imagineService.saveImagine(imagine);
+
+                tempFile.delete();
+            }
+
+            if (imageUrl != null) {
+                return ResponseEntity.ok(Map.of(
+                    "pacientId", savedPacient.getId(),
+                    "imageUrl", imageUrl,
+                    "message", "Pacient created successfully with image"
+                ));
+            } else {
+                return ResponseEntity.ok(Map.of(
+                    "pacientId", savedPacient.getId(),
+                    "message", "Pacient created successfully without image"
+                ));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error creating pacient: " + e.getMessage()));
         }
     }
 

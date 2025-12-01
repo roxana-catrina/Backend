@@ -71,6 +71,7 @@ public class SecurityConfig {
                                         // Notificare controller routes (singular + plural)
                                         "/api/notificare/**",
                                         "/api/notificari/**",
+                                        "/api/{userId}/pacient/withdata/",
                                         // WebSocket / STOMP endpoints commonly used
                                         "/ws/**",
                                         "/websocket/**",
