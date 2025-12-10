@@ -7,10 +7,13 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.FileSystemResource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.HashMap;
@@ -44,30 +47,145 @@ public class BrainTumorPredictionService {
     public PredictionResult predictTumor(MultipartFile file) throws IOException {
         String url = pythonApiUrl + "/predict";
 
+        System.out.println("=== BrainTumorPredictionService.predictTumor ===");
+        System.out.println("Sending to URL: " + url);
+        System.out.println("Original filename: " + file.getOriginalFilename());
+        System.out.println("File size: " + file.getSize());
+        System.out.println("Content type: " + file.getContentType());
+
+        // Read bytes ONCE and store them
+        byte[] fileBytes = file.getBytes();
+        System.out.println("Bytes read: " + fileBytes.length);
+        System.out.println("First 32 bytes (hex): " + bytesToHex(fileBytes, 32));
+
+        // Check if it's a valid DICOM file (DICOM has 128-byte preamble of zeros, then "DICM")
+        if (fileBytes.length > 132) {
+            String dicmSignature = new String(fileBytes, 128, 4);
+            System.out.println("Bytes 128-131 (DICOM signature): " + dicmSignature);
+            if ("DICM".equals(dicmSignature)) {
+                System.out.println("✅ Valid DICOM file detected!");
+            }
+        }
+
+        // Verify bytes are not all zeros by checking a sample
+        boolean hasNonZeroBytes = false;
+        for (int i = 0; i < Math.min(fileBytes.length, 1000); i++) {
+            if (fileBytes[i] != 0) {
+                hasNonZeroBytes = true;
+                System.out.println("First non-zero byte at position: " + i + " value: " + String.format("%02x", fileBytes[i]));
+                break;
+            }
+        }
+        if (!hasNonZeroBytes && fileBytes.length > 1000) {
+            // Check further in the file
+            for (int i = 1000; i < fileBytes.length; i += 1000) {
+                if (fileBytes[i] != 0) {
+                    hasNonZeroBytes = true;
+                    System.out.println("First non-zero byte at position: " + i + " value: " + String.format("%02x", fileBytes[i]));
+                    break;
+                }
+            }
+        }
+        System.out.println("File has non-zero content: " + hasNonZeroBytes);
+
+        // Detect if it's a valid DICOM file
+        boolean isValidDicom = false;
+        if (fileBytes.length > 132) {
+            String dicmSignature = new String(fileBytes, 128, 4);
+            isValidDicom = "DICM".equals(dicmSignature);
+        }
+
         // Create multipart request
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
+        // Add custom header to indicate valid DICOM
+        if (isValidDicom) {
+            headers.add("X-Is-Valid-DICOM", "true");
+        }
+
+        // Determine content type and filename
+        String contentType = file.getContentType();
+        String originalFilename = file.getOriginalFilename();
+        String filenameToSend = originalFilename;
+
+        if (contentType == null || contentType.equals("application/octet-stream")) {
+            // Try to determine from filename or DICOM signature
+            if (isValidDicom) {
+                contentType = "application/dicom";
+                // Ensure filename has .dcm extension for Python to recognize
+                if (filenameToSend == null || !filenameToSend.toLowerCase().endsWith(".dcm")) {
+                    filenameToSend = (filenameToSend != null ? filenameToSend : "image") + ".dcm";
+                }
+            } else if (originalFilename != null) {
+                if (originalFilename.toLowerCase().endsWith(".jpg") || originalFilename.toLowerCase().endsWith(".jpeg")) {
+                    contentType = "image/jpeg";
+                } else if (originalFilename.toLowerCase().endsWith(".png")) {
+                    contentType = "image/png";
+                } else if (originalFilename.toLowerCase().endsWith(".dcm")) {
+                    contentType = "application/dicom";
+                }
+            }
+        }
+
+        final String finalContentType = contentType;
+        final String finalFilename = filenameToSend;
+        System.out.println("Using content type: " + finalContentType);
+        System.out.println("Using filename: " + finalFilename);
+
+        // Write bytes to a temporary file for reliable multipart transfer
+        File tempFile = File.createTempFile("upload-", finalFilename != null ? "-" + finalFilename : ".tmp");
+        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+            fos.write(fileBytes);
+            fos.flush();
+        }
+
+        System.out.println("Created temp file: " + tempFile.getAbsolutePath() + " with size: " + tempFile.length());
+
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("file", new ByteArrayResource(file.getBytes()) {
+
+        // Use FileSystemResource which properly handles file transfer
+        FileSystemResource fileResource = new FileSystemResource(tempFile) {
             @Override
             public String getFilename() {
-                return file.getOriginalFilename();
+                return finalFilename != null ? finalFilename : super.getFilename();
             }
-        });
+        };
+
+        body.add("file", fileResource);
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-        // Send request
-        ResponseEntity<String> response = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                requestEntity,
-                String.class
-        );
+        System.out.println("Sending request to Python ML service...");
 
-        // Parse response
-        return parseResponse(response.getBody());
+        try {
+            // Send request
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    requestEntity,
+                    String.class
+            );
+
+            System.out.println("Received response: " + response.getStatusCode());
+            // Parse response
+            return parseResponse(response.getBody());
+        } finally {
+            // Clean up temp file
+            if (tempFile.exists()) {
+                tempFile.delete();
+            }
+        }
+    }
+
+    // Helper method to debug byte content
+    private String bytesToHex(byte[] bytes, int limit) {
+        StringBuilder sb = new StringBuilder();
+        int count = Math.min(bytes.length, limit);
+        for (int i = 0; i < count; i++) {
+            sb.append(String.format("%02x", bytes[i]));
+        }
+        return sb.toString();
     }
 
     /**

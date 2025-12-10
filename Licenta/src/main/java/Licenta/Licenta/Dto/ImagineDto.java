@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
@@ -27,5 +28,8 @@ public class ImagineDto {
     private Date dataIncarcare;
     private Date dataModificare;
 
+    // DICOM fields
+    private Boolean isDicom;
+    private Map<String, Object> dicomMetadata;
 
 }
