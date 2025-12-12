@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.Map;
 
 @Data
 @Document(collection = "imagini")
@@ -33,6 +34,11 @@ public class Imagine {
     private String observatii;
     private Date dataIncarcare;
     private Date dataModificare;
+
+    // ===== ADAUGĂ ACESTEA =====
+    private Boolean isDicom = false;
+    private Map<String, Object> dicomMetadata; // MongoDB stochează direct ca subdocument
+    // ==========================
 
 }
 

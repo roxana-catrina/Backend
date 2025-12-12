@@ -11,6 +11,8 @@ import Licenta.Licenta.Service.ImagineService;
 import Licenta.Licenta.Service.PacientService;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,7 +57,9 @@ public class PacientController {
             @RequestParam("cnp") String cnp,
             @RequestParam("numar_telefon") String numarTelefon,
             @RequestParam(value = "data_nasterii", required = false, defaultValue = "") String dataNasterii,
-            @RequestParam(value = "istoric_medical", required = false, defaultValue = "") String istoricMedical) {
+            @RequestParam(value = "istoric_medical", required = false, defaultValue = "") String istoricMedical,
+            @RequestParam(value = "isDicom", required = false) Boolean isDicom,
+            @RequestParam(value = "dicomMetadata", required = false) String dicomMetadataJson) {
 
         System.out.println("=== CREATE PACIENT REQUEST ===");
         System.out.println("User ID: " + userId);
@@ -91,7 +95,15 @@ public class PacientController {
                 File tempFile = File.createTempFile("temp-", file.getOriginalFilename());
                 file.transferTo(tempFile);
 
-                Map uploadResult = cloudinary.uploader().upload(tempFile, ObjectUtils.emptyMap());
+                Map uploadResult;
+                // Check if file is DICOM - upload as raw file
+                if (Boolean.TRUE.equals(isDicom) || file.getOriginalFilename().toLowerCase().endsWith(".dcm")) {
+                    uploadResult = cloudinary.uploader().upload(tempFile,
+                        ObjectUtils.asMap("resource_type", "raw"));
+                } else {
+                    uploadResult = cloudinary.uploader().upload(tempFile, ObjectUtils.emptyMap());
+                }
+
                 imageUrl = (String) uploadResult.get("secure_url");
                 String publicId = (String) uploadResult.get("public_id");
 
@@ -110,6 +122,23 @@ public class PacientController {
                 imagine.setCloudinaryPublicId(publicId);
                 imagine.setDataIncarcare(new Date());
                 imagine.setStatusAnaliza("neanalizata");
+
+                // Process DICOM metadata if provided
+                if (Boolean.TRUE.equals(isDicom) || file.getOriginalFilename().toLowerCase().endsWith(".dcm")) {
+                    imagine.setIsDicom(true);
+                    if (dicomMetadataJson != null && !dicomMetadataJson.isEmpty()) {
+                        try {
+                            ObjectMapper mapper = new ObjectMapper();
+                            Map<String, Object> metadata = mapper.readValue(
+                                    dicomMetadataJson,
+                                    new TypeReference<Map<String, Object>>() {}
+                            );
+                            imagine.setDicomMetadata(metadata);
+                        } catch (Exception e) {
+                            System.err.println("Error parsing DICOM metadata: " + e.getMessage());
+                        }
+                    }
+                }
 
                 imagineService.saveImagine(imagine);
 
@@ -178,7 +207,9 @@ public class PacientController {
     public ResponseEntity<?> createPacientWithJsonData(
             @PathVariable String userId,
             @RequestParam(value = "file", required = false) MultipartFile file,
-            @RequestParam("pacientData") String pacientDataJson) {
+            @RequestParam("pacientData") String pacientDataJson,
+            @RequestParam(value = "isDicom", required = false) Boolean isDicom,
+            @RequestParam(value = "dicomMetadata", required = false) String dicomMetadataJson) {
 
         Optional<User> userOptional = userRepository.findById(userId);
         if (userOptional.isEmpty()) {
@@ -211,7 +242,15 @@ public class PacientController {
                 File tempFile = File.createTempFile("temp-", file.getOriginalFilename());
                 file.transferTo(tempFile);
 
-                Map uploadResult = cloudinary.uploader().upload(tempFile, ObjectUtils.emptyMap());
+                Map uploadResult;
+                // Check if file is DICOM - upload as raw file
+                if (Boolean.TRUE.equals(isDicom) || file.getOriginalFilename().toLowerCase().endsWith(".dcm")) {
+                    uploadResult = cloudinary.uploader().upload(tempFile,
+                        ObjectUtils.asMap("resource_type", "raw"));
+                } else {
+                    uploadResult = cloudinary.uploader().upload(tempFile, ObjectUtils.emptyMap());
+                }
+
                 imageUrl = (String) uploadResult.get("secure_url");
                 String publicId = (String) uploadResult.get("public_id");
 
@@ -230,6 +269,23 @@ public class PacientController {
                 imagine.setCloudinaryPublicId(publicId);
                 imagine.setDataIncarcare(new Date());
                 imagine.setStatusAnaliza("neanalizata");
+
+                // Process DICOM metadata if provided
+                if (Boolean.TRUE.equals(isDicom) || file.getOriginalFilename().toLowerCase().endsWith(".dcm")) {
+                    imagine.setIsDicom(true);
+                    if (dicomMetadataJson != null && !dicomMetadataJson.isEmpty()) {
+                        try {
+                            ObjectMapper dicomMapper = new ObjectMapper();
+                            Map<String, Object> metadata = dicomMapper.readValue(
+                                    dicomMetadataJson,
+                                    new TypeReference<Map<String, Object>>() {}
+                            );
+                            imagine.setDicomMetadata(metadata);
+                        } catch (Exception e) {
+                            System.err.println("Error parsing DICOM metadata: " + e.getMessage());
+                        }
+                    }
+                }
 
                 imagineService.saveImagine(imagine);
 
@@ -258,7 +314,9 @@ public class PacientController {
     @PostMapping("/pacient/{pacientId}/imagine")
     public ResponseEntity<?> addImageToPacient(
             @PathVariable String pacientId,
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "isDicom", required = false) Boolean isDicom,
+            @RequestParam(value = "dicomMetadata", required = false) String dicomMetadataJson) {
 
         Optional<Pacient> pacientOptional = pacientService.findById(pacientId);
         if (pacientOptional.isEmpty()) {
@@ -270,7 +328,15 @@ public class PacientController {
             File tempFile = File.createTempFile("temp-", file.getOriginalFilename());
             file.transferTo(tempFile);
 
-            Map uploadResult = cloudinary.uploader().upload(tempFile, ObjectUtils.emptyMap());
+            Map uploadResult;
+            // Check if file is DICOM - upload as raw file
+            if (Boolean.TRUE.equals(isDicom) || file.getOriginalFilename().toLowerCase().endsWith(".dcm")) {
+                uploadResult = cloudinary.uploader().upload(tempFile,
+                    ObjectUtils.asMap("resource_type", "raw"));
+            } else {
+                uploadResult = cloudinary.uploader().upload(tempFile, ObjectUtils.emptyMap());
+            }
+
             String imageUrl = (String) uploadResult.get("secure_url");
             String publicId = (String) uploadResult.get("public_id");
 
@@ -290,6 +356,23 @@ public class PacientController {
             imagine.setDataIncarcare(new Date());
             imagine.setStatusAnaliza("neanalizata");
 
+            // Process DICOM metadata if provided
+            if (Boolean.TRUE.equals(isDicom) || file.getOriginalFilename().toLowerCase().endsWith(".dcm")) {
+                imagine.setIsDicom(true);
+                if (dicomMetadataJson != null && !dicomMetadataJson.isEmpty()) {
+                    try {
+                        ObjectMapper mapper = new ObjectMapper();
+                        Map<String, Object> metadata = mapper.readValue(
+                                dicomMetadataJson,
+                                new TypeReference<Map<String, Object>>() {}
+                        );
+                        imagine.setDicomMetadata(metadata);
+                    } catch (Exception e) {
+                        System.err.println("Error parsing DICOM metadata: " + e.getMessage());
+                    }
+                }
+            }
+
             imagineService.saveImagine(imagine);
 
             return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
@@ -308,6 +391,8 @@ public class PacientController {
             @RequestParam("tip") String tip,
             @RequestParam(value = "observatii", required = false) String observatii,
             @RequestParam(value = "statusAnaliza", defaultValue = "neanalizata") String statusAnaliza,
+            @RequestParam(value = "isDicom", required = false) Boolean isDicom,
+            @RequestParam(value = "dicomMetadata", required = false) String dicomMetadataJson,
             @RequestHeader(value = "Authorization", required = false) String token) {
 
         // Verify user exists
@@ -325,11 +410,51 @@ public class PacientController {
         }
 
         try {
-            // Upload image to Cloudinary
-            File tempFile = File.createTempFile("temp-", file.getOriginalFilename());
-            file.transferTo(tempFile);
+            System.out.println("=== uploadImagineWithDetails ===");
+            System.out.println("File: " + file.getOriginalFilename());
+            System.out.println("File size: " + file.getSize());
+            System.out.println("Content type: " + file.getContentType());
 
-            Map uploadResult = cloudinary.uploader().upload(tempFile, ObjectUtils.emptyMap());
+            // Check if file is empty BEFORE doing anything
+            if (file.isEmpty() || file.getSize() == 0) {
+                System.err.println("ERROR: File is EMPTY!");
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "File is empty. Please select a valid file."));
+            }
+
+            // Read bytes to verify content
+            byte[] fileBytes = file.getBytes();
+            System.out.println("Read " + fileBytes.length + " bytes from multipart file");
+
+            // Check if all bytes are zero
+            boolean allZeros = true;
+            for (int i = 0; i < Math.min(1000, fileBytes.length); i++) {
+                if (fileBytes[i] != 0) {
+                    allZeros = false;
+                    break;
+                }
+            }
+
+            if (allZeros) {
+                System.err.println("ERROR: File contains only ZERO bytes!");
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "File appears to be corrupted or empty (all zero bytes)"));
+            }
+
+            System.out.println("First 32 bytes (hex): " + bytesToHex(fileBytes, 32));
+
+            // Upload file to Cloudinary using the byte array
+            Map uploadResult;
+            // Check if file is DICOM - upload as raw file
+            if (Boolean.TRUE.equals(isDicom) || file.getOriginalFilename().toLowerCase().endsWith(".dcm")) {
+                // Upload DICOM as raw file
+                uploadResult = cloudinary.uploader().upload(fileBytes,
+                    ObjectUtils.asMap("resource_type", "raw"));
+            } else {
+                // Upload regular images
+                uploadResult = cloudinary.uploader().upload(fileBytes, ObjectUtils.emptyMap());
+            }
+
             String imageUrl = (String) uploadResult.get("secure_url");
             String publicId = (String) uploadResult.get("public_id");
 
@@ -350,9 +475,26 @@ public class PacientController {
             imagine.setStatusAnaliza(statusAnaliza);
             imagine.setDataIncarcare(new Date());
 
+            // Process DICOM metadata if provided
+            if (Boolean.TRUE.equals(isDicom) || file.getOriginalFilename().toLowerCase().endsWith(".dcm")) {
+                imagine.setIsDicom(true);
+                if (dicomMetadataJson != null && !dicomMetadataJson.isEmpty()) {
+                    try {
+                        ObjectMapper mapper = new ObjectMapper();
+                        Map<String, Object> metadata = mapper.readValue(
+                                dicomMetadataJson,
+                                new TypeReference<Map<String, Object>>() {}
+                        );
+                        imagine.setDicomMetadata(metadata);
+                    } catch (Exception e) {
+                        System.err.println("Error parsing DICOM metadata: " + e.getMessage());
+                    }
+                }
+            }
+
             Imagine savedImagine = imagineService.saveImagine(imagine);
 
-            tempFile.delete();
+            System.out.println("✅ Image saved successfully: " + savedImagine.getId());
 
             return ResponseEntity.ok(savedImagine);
         } catch (IOException e) {
@@ -460,12 +602,10 @@ public class PacientController {
                                     img.getDataAnalizei(),
                                     img.getStatusAnaliza(),
                                     img.getObservatii(),
-
                                     img.getDataIncarcare(),
-
-                                    img.getDataModificare()
-
-
+                                    img.getDataModificare(),
+                                    img.getIsDicom(),
+                                    img.getDicomMetadata()
                             ))
                             .collect(Collectors.toList());
 
@@ -512,10 +652,10 @@ public class PacientController {
                         img.getDataAnalizei(),
                         img.getStatusAnaliza(),
                         img.getObservatii(),
-
                         img.getDataIncarcare(),
-
-                        img.getDataModificare()
+                        img.getDataModificare(),
+                        img.getIsDicom(),
+                        img.getDicomMetadata()
                 ))
                 .collect(Collectors.toList());
 
@@ -558,10 +698,10 @@ public class PacientController {
                         img.getDataAnalizei(),
                         img.getStatusAnaliza(),
                         img.getObservatii(),
-
                         img.getDataIncarcare(),
-
-                        img.getDataModificare()
+                        img.getDataModificare(),
+                        img.getIsDicom(),
+                        img.getDicomMetadata()
                 ))
                 .collect(Collectors.toList());
 
@@ -584,7 +724,14 @@ public class PacientController {
 
             // Delete from Cloudinary
             if (imagine.getCloudinaryPublicId() != null && !imagine.getCloudinaryPublicId().isEmpty()) {
-                Map result = cloudinary.uploader().destroy(imagine.getCloudinaryPublicId(), ObjectUtils.emptyMap());
+                Map result;
+                // Check if it's a DICOM file and delete as raw resource
+                if (Boolean.TRUE.equals(imagine.getIsDicom())) {
+                    result = cloudinary.uploader().destroy(imagine.getCloudinaryPublicId(),
+                        ObjectUtils.asMap("resource_type", "raw"));
+                } else {
+                    result = cloudinary.uploader().destroy(imagine.getCloudinaryPublicId(), ObjectUtils.emptyMap());
+                }
                 System.out.println("Cloudinary delete result: " + result);
             }
 
@@ -619,7 +766,13 @@ public class PacientController {
             // Delete all images from Cloudinary
             for (Imagine imagine : imagini) {
                 if (imagine.getCloudinaryPublicId() != null && !imagine.getCloudinaryPublicId().isEmpty()) {
-                    cloudinary.uploader().destroy(imagine.getCloudinaryPublicId(), ObjectUtils.emptyMap());
+                    // Check if it's a DICOM file and delete as raw resource
+                    if (Boolean.TRUE.equals(imagine.getIsDicom())) {
+                        cloudinary.uploader().destroy(imagine.getCloudinaryPublicId(),
+                            ObjectUtils.asMap("resource_type", "raw"));
+                    } else {
+                        cloudinary.uploader().destroy(imagine.getCloudinaryPublicId(), ObjectUtils.emptyMap());
+                    }
                 }
                 imagineService.deleteImagine(imagine);
             }
@@ -661,6 +814,16 @@ public class PacientController {
         Pacient updatedPacient = pacientService.savePacient(pacient);
 
         return ResponseEntity.ok(updatedPacient);
+    }
+
+    // Helper method to debug byte content
+    private String bytesToHex(byte[] bytes, int limit) {
+        StringBuilder sb = new StringBuilder();
+        int count = Math.min(bytes.length, limit);
+        for (int i = 0; i < count; i++) {
+            sb.append(String.format("%02x", bytes[i]));
+        }
+        return sb.toString();
     }
 }
 

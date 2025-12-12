@@ -72,6 +72,7 @@ public class SecurityConfig {
                                         "/api/notificare/**",
                                         "/api/notificari/**",
                                         "/api/{userId}/pacient/withdata/",
+                                        "/api/pacient/**",
                                         // WebSocket / STOMP endpoints commonly used
                                         "/ws/**",
                                         "/websocket/**",
