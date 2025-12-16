@@ -30,4 +30,9 @@ public class MesajDTO {
     private String pacientDataNasterii;
     private String pacientSex;
 
+
+    private String pacientNumarTelefon;
+    private String pacientIstoricMedical;
+    private String pacientDetalii;
+    private Integer pacientNumarImagini;
 }

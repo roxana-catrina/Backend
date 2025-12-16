@@ -54,4 +54,14 @@ public class Mesaj {
 
 
     private String pacientSex;
+
+
+
+    private String pacientNumarTelefon;
+
+    private String pacientIstoricMedical;
+
+    private String pacientDetalii;
+
+    private Integer pacientNumarImagini;
 }

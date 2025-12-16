@@ -33,7 +33,11 @@ public class WebSocketMesajController {
                 request.getPacientPrenume(),
                 request.getPacientCnp(),
                 request.getPacientDataNasterii(),
-                request.getPacientSex()
+                request.getPacientSex(),
+                request.getPacientNumarTelefon(),
+                request.getPacientIstoricMedical(),
+                request.getPacientDetalii(),
+                request.getPacientNumarImagini()
         );
     }
 
