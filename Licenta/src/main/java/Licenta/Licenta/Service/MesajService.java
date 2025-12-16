@@ -33,7 +33,10 @@ public class MesajService {
     private NotificareService notificareService;
 
     // Trimite mesaj
-    public MesajDTO trimiteMesaj(String expeditorId, String destinatarId, String continut) {
+    public MesajDTO trimiteMesaj(String expeditorId, String destinatarId, String continut,
+                                  String tip, String pacientId, String pacientNume,
+                                  String pacientPrenume, String pacientCnp,
+                                  String pacientDataNasterii, String pacientSex) {
         // Log pentru debugging
         System.out.println("=== TRIMITE MESAJ ===");
         System.out.println("expeditorId: '" + expeditorId + "' (type: " + (expeditorId != null ? expeditorId.getClass().getName() : "null") + ")");
@@ -62,6 +65,13 @@ public class MesajService {
         mesaj.setDestinatarId(destinatarId);
         mesaj.setContinut(continut);
         mesaj.setCitit(false);
+        mesaj.setTip(tip);
+        mesaj.setPacientId(pacientId);
+        mesaj.setPacientNume(pacientNume);
+        mesaj.setPacientPrenume(pacientPrenume);
+        mesaj.setPacientCnp(pacientCnp);
+        mesaj.setPacientDataNasterii(pacientDataNasterii);
+        mesaj.setPacientSex(pacientSex);
         mesaj.onCreate(); // Set timestamp
 
         Mesaj savedMesaj = mesajRepository.save(mesaj);
@@ -147,6 +157,13 @@ public class MesajService {
         dto.setDataTrimitere(mesaj.getDataTrimitere());
         dto.setCitit(mesaj.getCitit());
         dto.setDataCitire(mesaj.getDataCitire());
+        dto.setTip(mesaj.getTip());
+        dto.setPacientId(mesaj.getPacientId());
+        dto.setPacientNume(mesaj.getPacientNume());
+        dto.setPacientPrenume(mesaj.getPacientPrenume());
+        dto.setPacientCnp(mesaj.getPacientCnp());
+        dto.setPacientDataNasterii(mesaj.getPacientDataNasterii());
+        dto.setPacientSex(mesaj.getPacientSex());
         return dto;
     }
 }

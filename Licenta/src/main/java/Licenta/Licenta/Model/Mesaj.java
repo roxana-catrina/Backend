@@ -33,4 +33,25 @@ public class Mesaj {
             dataTrimitere = LocalDateTime.now();
         }
     }
+
+
+    private String tip = "text"; // "text", "pacient_partajat"
+
+
+    private String pacientId; // ID-ul pacientului partajat (nullable)
+
+
+    private String pacientNume;
+
+
+    private String pacientPrenume;
+
+
+    private String pacientCnp;
+
+
+    private String pacientDataNasterii;
+
+
+    private String pacientSex;
 }

@@ -20,5 +20,14 @@ public class MesajDTO {
     private String continut;
     private LocalDateTime dataTrimitere;
     private Boolean citit;
+
     private LocalDateTime dataCitire;
+    private String tip = "text";
+    private String pacientId;
+    private String pacientNume;
+    private String pacientPrenume;
+    private String pacientCnp;
+    private String pacientDataNasterii;
+    private String pacientSex;
+
 }
