@@ -35,4 +35,6 @@ public class MesajDTO {
     private String pacientIstoricMedical;
     private String pacientDetalii;
     private Integer pacientNumarImagini;
+
+    private String pacientImagini;
 }

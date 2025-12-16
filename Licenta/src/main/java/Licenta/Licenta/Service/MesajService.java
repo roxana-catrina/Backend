@@ -38,7 +38,8 @@ public class MesajService {
                                   String pacientPrenume, String pacientCnp,
                                   String pacientDataNasterii, String pacientSex,
                                   String pacientNumarTelefon, String pacientIstoricMedical,
-                                  String pacientDetalii, Integer pacientNumarImagini) {
+                                  String pacientDetalii, Integer pacientNumarImagini,
+                                  String pacientImagini) {
         // Log pentru debugging
         System.out.println("=== TRIMITE MESAJ ===");
         System.out.println("expeditorId: '" + expeditorId + "' (type: " + (expeditorId != null ? expeditorId.getClass().getName() : "null") + ")");
@@ -78,6 +79,7 @@ public class MesajService {
         mesaj.setPacientIstoricMedical(pacientIstoricMedical);
         mesaj.setPacientDetalii(pacientDetalii);
         mesaj.setPacientNumarImagini(pacientNumarImagini);
+        mesaj.setPacientImagini(pacientImagini);
         mesaj.onCreate(); // Set timestamp
 
         Mesaj savedMesaj = mesajRepository.save(mesaj);
@@ -174,6 +176,7 @@ public class MesajService {
         dto.setPacientIstoricMedical(mesaj.getPacientIstoricMedical());
         dto.setPacientDetalii(mesaj.getPacientDetalii());
         dto.setPacientNumarImagini(mesaj.getPacientNumarImagini());
+        dto.setPacientImagini(mesaj.getPacientImagini());
         return dto;
     }
 }

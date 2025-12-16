@@ -64,7 +64,8 @@ public class MesajController {
                     request.getPacientNumarTelefon(),
                     request.getPacientIstoricMedical(),
                     request.getPacientDetalii(),
-                    request.getPacientNumarImagini()
+                    request.getPacientNumarImagini(),
+                    request.getPacientImagini()
             );
             System.out.println("✅ Mesaj trimis cu succes!");
             System.out.println("=========================================\n");
@@ -136,4 +137,5 @@ class MesajRequest {
     private String pacientIstoricMedical;
     private String pacientDetalii;
     private Integer pacientNumarImagini;
+    private String pacientImagini;
 }

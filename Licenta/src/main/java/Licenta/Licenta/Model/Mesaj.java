@@ -64,4 +64,6 @@ public class Mesaj {
     private String pacientDetalii;
 
     private Integer pacientNumarImagini;
+
+    private String pacientImagini;
 }
