@@ -2,6 +2,7 @@ package Licenta.Licenta.Model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 import lombok.Data;
 
 import java.util.Date;
@@ -40,6 +41,23 @@ public class Imagine {
     private Map<String, Object> dicomMetadata; // MongoDB stochează direct ca subdocument
     // ==========================
 
+    // ==================== CÂMPURI NOI PENTRU IMAGINI ====================
+    @Field("imagine_id")
+    private String imagineId; // ID-ul imaginii partajate (nullable)
+
+    @Field(value = "imagine_url")
+    private String imagineUrl; // URL-ul imaginii
+
+    @Field("imagine_nume")
+    private String imagineNume; // Numele imaginii
+
+    @Field("imagine_tip")
+    private String imagineTip; // Tipul imaginii (ex: image/jpeg, image/png)
+
+    @Field("imagine_data_incarcare")
+    private String imagineDataIncarcare; // Data încărcării imaginii
+
+    @Field("imagine_metadata")
+    private String imagineMetadata; // Metadate DICOM în format JSON
+    // ==================================================================
 }
-
-

@@ -48,11 +48,30 @@ public class MesajController {
             ));
         }
 
+
         try {
             MesajDTO mesaj = mesajService.trimiteMesaj(
                     request.getExpeditorId(),
                     request.getDestinatarId(),
-                    request.getContinut()
+                    request.getContinut(),
+                    request.getTip(),
+                    request.getPacientId(),
+                    request.getPacientNume(),
+                    request.getPacientPrenume(),
+                    request.getPacientCnp(),
+                    request.getPacientDataNasterii(),
+                    request.getPacientSex(),
+                    request.getPacientNumarTelefon(),
+                    request.getPacientIstoricMedical(),
+                    request.getPacientDetalii(),
+                    request.getPacientNumarImagini(),
+                    request.getPacientImagini(),
+                    request.getImagineId(),
+                    request.getImagineUrl(),
+                    request.getImagineNume(),
+                    request.getImagineTip(),
+                    request.getImagineDataIncarcare(),
+                    request.getImagineMetadata()
             );
             System.out.println("✅ Mesaj trimis cu succes!");
             System.out.println("=========================================\n");
@@ -113,4 +132,24 @@ class MesajRequest {
     private String expeditorId;
     private String destinatarId;
     private String continut;
+    private String tip;
+    private String pacientId;
+    private String pacientNume;
+    private String pacientPrenume;
+    private String pacientCnp;
+    private String pacientDataNasterii;
+    private String pacientSex;
+    private String pacientNumarTelefon;
+    private String pacientIstoricMedical;
+    private String pacientDetalii;
+    private Integer pacientNumarImagini;
+    private String pacientImagini;
+    // ==================== CÂMPURI IMAGINE PARTAJATĂ ====================
+    private String imagineId;
+    private String imagineUrl;
+    private String imagineNume;
+    private String imagineTip;
+    private String imagineDataIncarcare;
+    private String imagineMetadata; // Metadate DICOM în format JSON
+    // =================================================================
 }

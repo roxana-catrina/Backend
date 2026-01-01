@@ -33,4 +33,46 @@ public class Mesaj {
             dataTrimitere = LocalDateTime.now();
         }
     }
+
+
+    private String tip = "text"; // "text", "pacient_partajat"
+
+
+    private String pacientId; // ID-ul pacientului partajat (nullable)
+
+
+    private String pacientNume;
+
+
+    private String pacientPrenume;
+
+
+    private String pacientCnp;
+
+
+    private String pacientDataNasterii;
+
+
+    private String pacientSex;
+
+
+
+    private String pacientNumarTelefon;
+
+    private String pacientIstoricMedical;
+
+    private String pacientDetalii;
+
+    private Integer pacientNumarImagini;
+
+    private String pacientImagini;
+
+    // ==================== CÂMPURI IMAGINE PARTAJATĂ ====================
+    private String imagineId;
+    private String imagineUrl;
+    private String imagineNume;
+    private String imagineTip;
+    private String imagineDataIncarcare;
+    private String imagineMetadata; // Metadate DICOM în format JSON
+    // =================================================================
 }

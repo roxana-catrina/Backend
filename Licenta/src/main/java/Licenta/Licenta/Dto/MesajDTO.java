@@ -20,5 +20,30 @@ public class MesajDTO {
     private String continut;
     private LocalDateTime dataTrimitere;
     private Boolean citit;
+
     private LocalDateTime dataCitire;
+    private String tip = "text";
+    private String pacientId;
+    private String pacientNume;
+    private String pacientPrenume;
+    private String pacientCnp;
+    private String pacientDataNasterii;
+    private String pacientSex;
+
+
+    private String pacientNumarTelefon;
+    private String pacientIstoricMedical;
+    private String pacientDetalii;
+    private Integer pacientNumarImagini;
+
+    private String pacientImagini;
+
+    // ==================== CÂMPURI IMAGINE PARTAJATĂ ====================
+    private String imagineId;
+    private String imagineUrl;
+    private String imagineNume;
+    private String imagineTip;
+    private String imagineDataIncarcare;
+    private String imagineMetadata; // Metadate DICOM în format JSON
+    // =================================================================
 }

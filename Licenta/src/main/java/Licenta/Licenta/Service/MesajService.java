@@ -33,7 +33,15 @@ public class MesajService {
     private NotificareService notificareService;
 
     // Trimite mesaj
-    public MesajDTO trimiteMesaj(String expeditorId, String destinatarId, String continut) {
+    public MesajDTO trimiteMesaj(String expeditorId, String destinatarId, String continut,
+                                  String tip, String pacientId, String pacientNume,
+                                  String pacientPrenume, String pacientCnp,
+                                  String pacientDataNasterii, String pacientSex,
+                                  String pacientNumarTelefon, String pacientIstoricMedical,
+                                  String pacientDetalii, Integer pacientNumarImagini,
+                                  String pacientImagini,
+                                  String imagineId, String imagineUrl, String imagineNume,
+                                  String imagineTip, String imagineDataIncarcare, String imagineMetadata) {
         // Log pentru debugging
         System.out.println("=== TRIMITE MESAJ ===");
         System.out.println("expeditorId: '" + expeditorId + "' (type: " + (expeditorId != null ? expeditorId.getClass().getName() : "null") + ")");
@@ -62,6 +70,27 @@ public class MesajService {
         mesaj.setDestinatarId(destinatarId);
         mesaj.setContinut(continut);
         mesaj.setCitit(false);
+        mesaj.setTip(tip);
+        mesaj.setPacientId(pacientId);
+        mesaj.setPacientNume(pacientNume);
+        mesaj.setPacientPrenume(pacientPrenume);
+        mesaj.setPacientCnp(pacientCnp);
+        mesaj.setPacientDataNasterii(pacientDataNasterii);
+        mesaj.setPacientSex(pacientSex);
+        mesaj.setPacientNumarTelefon(pacientNumarTelefon);
+        mesaj.setPacientIstoricMedical(pacientIstoricMedical);
+        mesaj.setPacientDetalii(pacientDetalii);
+        mesaj.setPacientNumarImagini(pacientNumarImagini);
+        mesaj.setPacientImagini(pacientImagini);
+        // Setare câmpuri imagine dacă sunt prezente
+        if (imagineId != null || imagineUrl != null || imagineNume != null || imagineTip != null || imagineDataIncarcare != null || imagineMetadata != null) {
+            mesaj.setImagineId(imagineId);
+            mesaj.setImagineUrl(imagineUrl);
+            mesaj.setImagineNume(imagineNume);
+            mesaj.setImagineTip(imagineTip);
+            mesaj.setImagineDataIncarcare(imagineDataIncarcare);
+            mesaj.setImagineMetadata(imagineMetadata);
+        }
         mesaj.onCreate(); // Set timestamp
 
         Mesaj savedMesaj = mesajRepository.save(mesaj);
@@ -83,7 +112,18 @@ public class MesajService {
 
     // Obține istoricul conversației
     public List<MesajDTO> getConversation(String user1Id, String user2Id) {
+        System.out.println("=== GET CONVERSATION ===");
+        System.out.println("user1Id: '" + user1Id + "'");
+        System.out.println("user2Id: '" + user2Id + "'");
+
         List<Mesaj> mesaje = mesajRepository.findConversation(user1Id, user2Id);
+
+        System.out.println("Mesaje găsite: " + mesaje.size());
+        if (!mesaje.isEmpty()) {
+            System.out.println("Primul mesaj: expeditor=" + mesaje.get(0).getExpeditorId() +
+                             ", destinatar=" + mesaje.get(0).getDestinatarId());
+        }
+
         return mesaje.stream()
                 .map(mesaj -> {
                     User expeditor = userRepository.findById(mesaj.getExpeditorId()).orElse(null);
@@ -147,6 +187,25 @@ public class MesajService {
         dto.setDataTrimitere(mesaj.getDataTrimitere());
         dto.setCitit(mesaj.getCitit());
         dto.setDataCitire(mesaj.getDataCitire());
+        dto.setTip(mesaj.getTip());
+        dto.setPacientId(mesaj.getPacientId());
+        dto.setPacientNume(mesaj.getPacientNume());
+        dto.setPacientPrenume(mesaj.getPacientPrenume());
+        dto.setPacientCnp(mesaj.getPacientCnp());
+        dto.setPacientDataNasterii(mesaj.getPacientDataNasterii());
+        dto.setPacientSex(mesaj.getPacientSex());
+        dto.setPacientNumarTelefon(mesaj.getPacientNumarTelefon());
+        dto.setPacientIstoricMedical(mesaj.getPacientIstoricMedical());
+        dto.setPacientDetalii(mesaj.getPacientDetalii());
+        dto.setPacientNumarImagini(mesaj.getPacientNumarImagini());
+        dto.setPacientImagini(mesaj.getPacientImagini());
+        // Mapare câmpuri imagine
+        dto.setImagineId(mesaj.getImagineId());
+        dto.setImagineUrl(mesaj.getImagineUrl());
+        dto.setImagineNume(mesaj.getImagineNume());
+        dto.setImagineTip(mesaj.getImagineTip());
+        dto.setImagineDataIncarcare(mesaj.getImagineDataIncarcare());
+        dto.setImagineMetadata(mesaj.getImagineMetadata());
         return dto;
     }
 }

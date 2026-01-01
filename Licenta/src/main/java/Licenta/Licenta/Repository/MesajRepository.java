@@ -11,7 +11,8 @@ import java.util.List;
 public interface MesajRepository extends MongoRepository<Mesaj, String> {
 
     // Find all messages between two users - sorted by date
-    @Query("{'$or': [{'expeditorId': ?0, 'destinatarId': ?1}, {'expeditorId': ?1, 'destinatarId': ?0}]}")
+    @Query(value = "{'$or': [{'expeditorId': ?0, 'destinatarId': ?1}, {'expeditorId': ?1, 'destinatarId': ?0}]}",
+           sort = "{'dataTrimitere': 1}")
     List<Mesaj> findConversation(String user1Id, String user2Id);
 
     // Count unread messages for a user

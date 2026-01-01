@@ -26,7 +26,25 @@ public class WebSocketMesajController {
         return mesajService.trimiteMesaj(
                 request.getExpeditorId(),
                 request.getDestinatarId(),
-                request.getContinut()
+                request.getContinut(),
+                request.getTip(),
+                request.getPacientId(),
+                request.getPacientNume(),
+                request.getPacientPrenume(),
+                request.getPacientCnp(),
+                request.getPacientDataNasterii(),
+                request.getPacientSex(),
+                request.getPacientNumarTelefon(),
+                request.getPacientIstoricMedical(),
+                request.getPacientDetalii(),
+                request.getPacientNumarImagini(),
+                request.getPacientImagini(),
+                request.getImagineId(),
+                request.getImagineUrl(),
+                request.getImagineNume(),
+                request.getImagineTip(),
+                request.getImagineDataIncarcare(),
+                request.getImagineMetadata()
         );
     }
 

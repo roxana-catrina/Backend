@@ -605,7 +605,13 @@ public class PacientController {
                                     img.getDataIncarcare(),
                                     img.getDataModificare(),
                                     img.getIsDicom(),
-                                    img.getDicomMetadata()
+                                    img.getDicomMetadata(),
+                                    img.getImagineId(),
+                                    img.getImagineUrl(),
+                                    img.getImagineNume(),
+                                    img.getImagineTip(),
+                                    img.getImagineDataIncarcare(),
+                                    img.getImagineMetadata()
                             ))
                             .collect(Collectors.toList());
 
@@ -655,7 +661,13 @@ public class PacientController {
                         img.getDataIncarcare(),
                         img.getDataModificare(),
                         img.getIsDicom(),
-                        img.getDicomMetadata()
+                        img.getDicomMetadata(),
+                        img.getImagineId(),
+                        img.getImagineUrl(),
+                        img.getImagineNume(),
+                        img.getImagineTip(),
+                        img.getImagineDataIncarcare(),
+                        img.getImagineMetadata()
                 ))
                 .collect(Collectors.toList());
 
@@ -701,7 +713,13 @@ public class PacientController {
                         img.getDataIncarcare(),
                         img.getDataModificare(),
                         img.getIsDicom(),
-                        img.getDicomMetadata()
+                        img.getDicomMetadata(),
+                        img.getImagineId(),
+                        img.getImagineUrl(),
+                        img.getImagineNume(),
+                        img.getImagineTip(),
+                        img.getImagineDataIncarcare(),
+                        img.getImagineMetadata()
                 ))
                 .collect(Collectors.toList());
 
