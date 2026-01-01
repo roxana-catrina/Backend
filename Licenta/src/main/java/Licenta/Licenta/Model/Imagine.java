@@ -56,5 +56,8 @@ public class Imagine {
 
     @Field("imagine_data_incarcare")
     private String imagineDataIncarcare; // Data încărcării imaginii
+
+    @Field("imagine_metadata")
+    private String imagineMetadata; // Metadate DICOM în format JSON
     // ==================================================================
 }

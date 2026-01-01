@@ -610,7 +610,8 @@ public class PacientController {
                                     img.getImagineUrl(),
                                     img.getImagineNume(),
                                     img.getImagineTip(),
-                                    img.getImagineDataIncarcare()
+                                    img.getImagineDataIncarcare(),
+                                    img.getImagineMetadata()
                             ))
                             .collect(Collectors.toList());
 
@@ -665,7 +666,8 @@ public class PacientController {
                         img.getImagineUrl(),
                         img.getImagineNume(),
                         img.getImagineTip(),
-                        img.getImagineDataIncarcare()
+                        img.getImagineDataIncarcare(),
+                        img.getImagineMetadata()
                 ))
                 .collect(Collectors.toList());
 
@@ -716,7 +718,8 @@ public class PacientController {
                         img.getImagineUrl(),
                         img.getImagineNume(),
                         img.getImagineTip(),
-                        img.getImagineDataIncarcare()
+                        img.getImagineDataIncarcare(),
+                        img.getImagineMetadata()
                 ))
                 .collect(Collectors.toList());
 

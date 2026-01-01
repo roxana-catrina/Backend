@@ -43,7 +43,8 @@ public class WebSocketMesajController {
                 request.getImagineUrl(),
                 request.getImagineNume(),
                 request.getImagineTip(),
-                request.getImagineDataIncarcare()
+                request.getImagineDataIncarcare(),
+                request.getImagineMetadata()
         );
     }
 

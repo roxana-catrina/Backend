@@ -73,5 +73,6 @@ public class Mesaj {
     private String imagineNume;
     private String imagineTip;
     private String imagineDataIncarcare;
+    private String imagineMetadata; // Metadate DICOM în format JSON
     // =================================================================
 }

@@ -70,7 +70,8 @@ public class MesajController {
                     request.getImagineUrl(),
                     request.getImagineNume(),
                     request.getImagineTip(),
-                    request.getImagineDataIncarcare()
+                    request.getImagineDataIncarcare(),
+                    request.getImagineMetadata()
             );
             System.out.println("✅ Mesaj trimis cu succes!");
             System.out.println("=========================================\n");
@@ -149,5 +150,6 @@ class MesajRequest {
     private String imagineNume;
     private String imagineTip;
     private String imagineDataIncarcare;
+    private String imagineMetadata; // Metadate DICOM în format JSON
     // =================================================================
 }
