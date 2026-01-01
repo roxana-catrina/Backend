@@ -37,4 +37,12 @@ public class MesajDTO {
     private Integer pacientNumarImagini;
 
     private String pacientImagini;
+
+    // ==================== CÂMPURI IMAGINE PARTAJATĂ ====================
+    private String imagineId;
+    private String imagineUrl;
+    private String imagineNume;
+    private String imagineTip;
+    private String imagineDataIncarcare;
+    // =================================================================
 }

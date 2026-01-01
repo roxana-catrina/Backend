@@ -39,7 +39,9 @@ public class MesajService {
                                   String pacientDataNasterii, String pacientSex,
                                   String pacientNumarTelefon, String pacientIstoricMedical,
                                   String pacientDetalii, Integer pacientNumarImagini,
-                                  String pacientImagini) {
+                                  String pacientImagini,
+                                  String imagineId, String imagineUrl, String imagineNume,
+                                  String imagineTip, String imagineDataIncarcare) {
         // Log pentru debugging
         System.out.println("=== TRIMITE MESAJ ===");
         System.out.println("expeditorId: '" + expeditorId + "' (type: " + (expeditorId != null ? expeditorId.getClass().getName() : "null") + ")");
@@ -80,6 +82,14 @@ public class MesajService {
         mesaj.setPacientDetalii(pacientDetalii);
         mesaj.setPacientNumarImagini(pacientNumarImagini);
         mesaj.setPacientImagini(pacientImagini);
+        // Setare câmpuri imagine dacă sunt prezente
+        if (imagineId != null || imagineUrl != null || imagineNume != null || imagineTip != null || imagineDataIncarcare != null) {
+            mesaj.setImagineId(imagineId);
+            mesaj.setImagineUrl(imagineUrl);
+            mesaj.setImagineNume(imagineNume);
+            mesaj.setImagineTip(imagineTip);
+            mesaj.setImagineDataIncarcare(imagineDataIncarcare);
+        }
         mesaj.onCreate(); // Set timestamp
 
         Mesaj savedMesaj = mesajRepository.save(mesaj);
@@ -177,6 +187,12 @@ public class MesajService {
         dto.setPacientDetalii(mesaj.getPacientDetalii());
         dto.setPacientNumarImagini(mesaj.getPacientNumarImagini());
         dto.setPacientImagini(mesaj.getPacientImagini());
+        // Mapare câmpuri imagine
+        dto.setImagineId(mesaj.getImagineId());
+        dto.setImagineUrl(mesaj.getImagineUrl());
+        dto.setImagineNume(mesaj.getImagineNume());
+        dto.setImagineTip(mesaj.getImagineTip());
+        dto.setImagineDataIncarcare(mesaj.getImagineDataIncarcare());
         return dto;
     }
 }

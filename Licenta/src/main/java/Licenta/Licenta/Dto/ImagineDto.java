@@ -32,4 +32,11 @@ public class ImagineDto {
     private Boolean isDicom;
     private Map<String, Object> dicomMetadata;
 
+
+    // Câmpuri pentru imagine partajată
+    private String imagineId;
+    private String imagineUrl;
+    private String imagineNume;
+    private String imagineTip;
+    private String imagineDataIncarcare;
 }

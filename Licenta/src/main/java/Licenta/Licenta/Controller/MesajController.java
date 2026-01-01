@@ -65,7 +65,12 @@ public class MesajController {
                     request.getPacientIstoricMedical(),
                     request.getPacientDetalii(),
                     request.getPacientNumarImagini(),
-                    request.getPacientImagini()
+                    request.getPacientImagini(),
+                    request.getImagineId(),
+                    request.getImagineUrl(),
+                    request.getImagineNume(),
+                    request.getImagineTip(),
+                    request.getImagineDataIncarcare()
             );
             System.out.println("✅ Mesaj trimis cu succes!");
             System.out.println("=========================================\n");
@@ -138,4 +143,11 @@ class MesajRequest {
     private String pacientDetalii;
     private Integer pacientNumarImagini;
     private String pacientImagini;
+    // ==================== CÂMPURI IMAGINE PARTAJATĂ ====================
+    private String imagineId;
+    private String imagineUrl;
+    private String imagineNume;
+    private String imagineTip;
+    private String imagineDataIncarcare;
+    // =================================================================
 }

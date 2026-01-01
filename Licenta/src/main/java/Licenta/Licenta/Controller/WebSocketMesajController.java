@@ -38,7 +38,12 @@ public class WebSocketMesajController {
                 request.getPacientIstoricMedical(),
                 request.getPacientDetalii(),
                 request.getPacientNumarImagini(),
-                request.getPacientImagini()
+                request.getPacientImagini(),
+                request.getImagineId(),
+                request.getImagineUrl(),
+                request.getImagineNume(),
+                request.getImagineTip(),
+                request.getImagineDataIncarcare()
         );
     }
 
