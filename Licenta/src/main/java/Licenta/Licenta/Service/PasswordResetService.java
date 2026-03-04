@@ -35,39 +35,27 @@ public class PasswordResetService {
     @Transactional
     public void sendVerificationCode(String email) throws Exception {
         System.out.println("PasswordResetService: Processing password reset for email: " + email);
-
-        // Verifică dacă există utilizator cu acest email
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (!userOpt.isPresent()) {
             System.out.println("User not found with email: " + email);
             throw new Exception("Nu există niciun cont cu acest email!");
         }
-
         System.out.println("User found: " + userOpt.get().getEmail());
-
-        // Șterge token-urile vechi pentru acest email
         try {
             tokenRepository.deleteByEmail(email);
             System.out.println("Old tokens deleted for email: " + email);
         } catch (Exception e) {
             System.err.println("Error deleting old tokens: " + e.getMessage());
         }
-
-        // Generează un cod de 6 cifre
         String code = generateVerificationCode();
         System.out.println("Generated verification code: " + code);
-
-        // Creează token-ul
         PasswordResetToken token = new PasswordResetToken(
                 email,
                 code,
                 LocalDateTime.now().plusMinutes(EXPIRY_MINUTES)
         );
-
         tokenRepository.save(token);
         System.out.println("Token saved to database");
-
-        // Trimite email-ul
         try {
             emailService.sendVerificationCode(email, code);
             System.out.println("Verification code sent successfully to: " + email);
@@ -120,5 +108,17 @@ public class PasswordResetService {
     @Transactional
     public void cleanupExpiredTokens() {
         tokenRepository.deleteByExpiryDateBefore(LocalDateTime.now());
+    }
+
+    /**
+     * Metoda pentru a obține ultimul cod generat pentru un email (doar pentru testing!)
+     * NU trebuie folosită în producție!
+     */
+    public String getLastCodeForEmail(String email) {
+        Optional<PasswordResetToken> tokenOpt = tokenRepository.findTopByEmailOrderByExpiryDateDesc(email);
+        if (tokenOpt.isPresent()) {
+            return tokenOpt.get().getCode();
+        }
+        return null;
     }
 }

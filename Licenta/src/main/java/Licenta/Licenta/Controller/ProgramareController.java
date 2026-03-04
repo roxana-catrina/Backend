@@ -31,7 +31,7 @@ public class ProgramareController {
         }
     }
 
-    // Inner class for error responses
+
     private static class ErrorResponse {
         private final String message;
 

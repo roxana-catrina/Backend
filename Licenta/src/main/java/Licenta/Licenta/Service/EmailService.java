@@ -17,17 +17,17 @@ public class EmailService {
             System.out.println("EmailService: Preparing to send email to: " + toEmail);
 
             SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom("noreply@photosolve.com");
+            message.setFrom("noreply@BrainScanAI.com");
             message.setTo(toEmail);
-            message.setSubject("PhotoSolve - Cod de Resetare Parolă");
+            message.setSubject("BrainScan AI - Cod de Resetare Parolă");
             message.setText(
                     "Bună ziua,\n\n" +
-                            "Ați solicitat resetarea parolei pentru contul dumneavoastră PhotoSolve.\n\n" +
+                            "Ați solicitat resetarea parolei pentru contul dumneavoastră BrainScan AI.\n\n" +
                             "Codul dumneavoastră de verificare este: " + code + "\n\n" +
                             "Acest cod este valabil 15 minute.\n\n" +
                             "Dacă nu ați solicitat resetarea parolei, vă rugăm să ignorați acest email.\n\n" +
                             "Cu respect,\n" +
-                            "Echipa PhotoSolve"
+                            "Echipa BrainScan AI"
             );
 
             System.out.println("EmailService: Sending email...");

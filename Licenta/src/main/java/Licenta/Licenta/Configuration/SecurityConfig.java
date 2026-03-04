@@ -79,7 +79,8 @@ public class SecurityConfig {
                                         "/ws-mesaj/**",
                                 "/api/password-reset/**",
                                 "/api/test/check-user/**",
-                                "/api/test/test-email/**"
+                                "/api/test/test-email/**",
+                                "/api/test/**"
                                 ).permitAll()
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .anyRequest().authenticated()

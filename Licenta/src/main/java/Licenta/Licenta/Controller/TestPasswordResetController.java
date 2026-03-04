@@ -2,6 +2,7 @@ package Licenta.Licenta.Controller;
 
 import Licenta.Licenta.Repository.UserRepository;
 import Licenta.Licenta.Model.User;
+import Licenta.Licenta.Service.PasswordResetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
@@ -26,6 +27,9 @@ public class TestPasswordResetController {
 
     @Autowired
     private JavaMailSender mailSender;
+
+    @Autowired
+    private PasswordResetService passwordResetService;
 
     /**
      * Test 1: Verifică dacă user-ul există în baza de date
@@ -54,6 +58,35 @@ public class TestPasswordResetController {
         } catch (Exception e) {
             response.put("error", e.getMessage());
             response.put("message", "❌ Eroare la verificare: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Test 1.5: Obține ultimul cod de resetare parola pentru un email
+     * ⚠️ DOAR PENTRU TESTING! NU folosi în producție!
+     */
+    @GetMapping("/password-reset-code/{email}")
+    public ResponseEntity<Map<String, String>> getResetCode(@PathVariable String email) {
+        Map<String, String> response = new HashMap<>();
+
+        try {
+            // Returnează ultimul cod generat pentru acest email
+            String code = passwordResetService.getLastCodeForEmail(email);
+
+            if (code != null) {
+                response.put("code", code);
+                response.put("email", email);
+                response.put("message", "✅ Cod găsit!");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("email", email);
+                response.put("message", "❌ Nu există niciun cod generat pentru acest email!");
+                return ResponseEntity.status(404).body(response);
+            }
+        } catch (Exception e) {
+            response.put("error", e.getMessage());
+            response.put("message", "❌ Eroare la obținerea codului: " + e.getMessage());
             return ResponseEntity.status(500).body(response);
         }
     }
