@@ -23,9 +23,6 @@ public class ProgramareService {
     private final PacientRepository pacientRepository;
 
     public Programare createProgramare(ProgramareDTO dto) {
-        log.info("Creating programare for pacientId: {}", dto.getPacientId());
-
-        // Fetch the pacient first
         Pacient pacient = pacientRepository.findById(dto.getPacientId())
                 .orElseThrow(() -> {
                     log.error("Pacient not found with id: {}", dto.getPacientId());
@@ -33,8 +30,6 @@ public class ProgramareService {
                 });
 
         log.info("Found pacient: {} {}", pacient.getNumePacient(), pacient.getPrenumePacient());
-
-        // Create Programare
         Programare programare = new Programare(
                 null,  // id
                 pacient.getId(),  // pacient ID

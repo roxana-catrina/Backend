@@ -61,11 +61,6 @@ public class PacientController {
             @RequestParam(value = "isDicom", required = false) Boolean isDicom,
             @RequestParam(value = "dicomMetadata", required = false) String dicomMetadataJson) {
 
-        System.out.println("=== CREATE PACIENT REQUEST ===");
-        System.out.println("User ID: " + userId);
-        System.out.println("File present: " + (file != null && !file.isEmpty()));
-        System.out.println("Nume pacient: " + numePacient);
-
         Optional<User> userOptional = userRepository.findById(userId);
         if (userOptional.isEmpty()) {
             System.out.println("User not found!");
