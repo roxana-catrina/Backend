@@ -34,33 +34,27 @@ public class PasswordResetService {
 
     @Transactional
     public void sendVerificationCode(String email) throws Exception {
-        System.out.println("PasswordResetService: Processing password reset for email: " + email);
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (!userOpt.isPresent()) {
-            System.out.println("User not found with email: " + email);
-            throw new Exception("Nu există niciun cont cu acest email!");
+            throw new Exception("Nu exista niciun cont cu acest email!");
         }
-        System.out.println("User found: " + userOpt.get().getEmail());
         try {
             tokenRepository.deleteByEmail(email);
-            System.out.println("Old tokens deleted for email: " + email);
+
         } catch (Exception e) {
-            System.err.println("Error deleting old tokens: " + e.getMessage());
+            System.err.println("Eroare token: " + e.getMessage());
         }
         String code = generateVerificationCode();
-        System.out.println("Generated verification code: " + code);
+
         PasswordResetToken token = new PasswordResetToken(
                 email,
                 code,
                 LocalDateTime.now().plusMinutes(EXPIRY_MINUTES)
         );
         tokenRepository.save(token);
-        System.out.println("Token saved to database");
         try {
             emailService.sendVerificationCode(email, code);
-            System.out.println("Verification code sent successfully to: " + email);
         } catch (Exception e) {
-            System.err.println("Error sending email: " + e.getMessage());
             e.printStackTrace();
             throw new Exception("Eroare la trimiterea email-ului: " + e.getMessage());
         }

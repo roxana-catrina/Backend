@@ -25,11 +25,8 @@ public class ProgramareService {
     public Programare createProgramare(ProgramareDTO dto) {
         Pacient pacient = pacientRepository.findById(dto.getPacientId())
                 .orElseThrow(() -> {
-                    log.error("Pacient not found with id: {}", dto.getPacientId());
                     return new RuntimeException("Pacient not found with id: " + dto.getPacientId());
                 });
-
-        log.info("Found pacient: {} {}", pacient.getNumePacient(), pacient.getPrenumePacient());
         Programare programare = new Programare(
                 null,  // id
                 pacient.getId(),  // pacient ID
@@ -44,7 +41,6 @@ public class ProgramareService {
         );
 
         Programare saved = programareRepository.save(programare);
-        log.info("Programare created successfully with id: {}", saved.getId());
         return saved;
     }
 
