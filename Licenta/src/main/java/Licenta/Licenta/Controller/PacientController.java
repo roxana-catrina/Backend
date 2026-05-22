@@ -1,5 +1,6 @@
 package Licenta.Licenta.Controller;
 
+import Licenta.Licenta.Dto.AnnotatedImageRequest;
 import Licenta.Licenta.Dto.ImagineDto;
 import Licenta.Licenta.Dto.PacientDto;
 import Licenta.Licenta.Model.Imagine;
@@ -568,6 +569,53 @@ public class PacientController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Error updating imagine: " + e.getMessage()));
+        }
+    }
+
+    // Salvează imaginea adnotată (înlocuiește imaginea existentă cu versiunea adnotată)
+    @PostMapping("/{userId}/pacient/{pacientId}/imagine/{imageId}/annotate")
+    public ResponseEntity<?> saveAnnotatedImage(
+            @PathVariable String userId,
+            @PathVariable String pacientId,
+            @PathVariable String imageId,
+            @RequestBody AnnotatedImageRequest request,
+            @RequestHeader(value = "Authorization", required = false) String token) {
+
+        // Verifică că userul există
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "User not found"));
+        }
+
+        // Verifică că pacientul aparține userului
+        Optional<Pacient> pacientOptional = pacientService.findByUserIdAndId(userId, pacientId);
+        if (pacientOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "Pacient not found or does not belong to this user"));
+        }
+
+        // Verifică că imaginea aparține pacientului
+        Optional<Imagine> imagineOptional = imagineService.findByPacientIdAndId(pacientId, imageId);
+        if (imagineOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "Imagine not found or does not belong to this pacient"));
+        }
+
+        if (request.getAnnotatedImage() == null || request.getAnnotatedImage().isEmpty()) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "annotatedImage field is required"));
+        }
+
+        try {
+            ImagineDto updated = imagineService.saveAnnotatedImage(imageId, request.getAnnotatedImage());
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error saving annotated image: " + e.getMessage()));
         }
     }
 
