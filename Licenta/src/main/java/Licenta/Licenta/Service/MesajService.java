@@ -41,7 +41,8 @@ public class MesajService {
                                   String pacientDetalii, Integer pacientNumarImagini,
                                   String pacientImagini,
                                   String imagineId, String imagineUrl, String imagineNume,
-                                  String imagineTip, String imagineDataIncarcare, String imagineMetadata) {
+                                  String imagineTip, String imagineDataIncarcare, String imagineMetadata,
+                                  String apelStatus, Integer apelDurata) {
         // Log pentru debugging
         System.out.println("=== TRIMITE MESAJ ===");
         System.out.println("expeditorId: '" + expeditorId + "' (type: " + (expeditorId != null ? expeditorId.getClass().getName() : "null") + ")");
@@ -91,6 +92,9 @@ public class MesajService {
             mesaj.setImagineDataIncarcare(imagineDataIncarcare);
             mesaj.setImagineMetadata(imagineMetadata);
         }
+        // Setare câmpuri apel video
+        mesaj.setApelStatus(apelStatus);
+        mesaj.setApelDurata(apelDurata);
         mesaj.onCreate(); // Set timestamp
 
         Mesaj savedMesaj = mesajRepository.save(mesaj);
@@ -206,6 +210,9 @@ public class MesajService {
         dto.setImagineTip(mesaj.getImagineTip());
         dto.setImagineDataIncarcare(mesaj.getImagineDataIncarcare());
         dto.setImagineMetadata(mesaj.getImagineMetadata());
+        // Mapare câmpuri apel video
+        dto.setApelStatus(mesaj.getApelStatus());
+        dto.setApelDurata(mesaj.getApelDurata());
         return dto;
     }
 }
