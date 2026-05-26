@@ -259,6 +259,100 @@ public class BrainTumorController {
     }
 
     /**
+     * Predict tumor with segmentation overlay
+     * Returns prediction + segmentation mask, contour, dimensions
+     */
+    @PostMapping("/predict-with-segmentation")
+    public ResponseEntity<?> predictWithSegmentation(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "threshold", defaultValue = "0.4") double threshold) {
+        try {
+            System.out.println("=== BrainTumorController.predictWithSegmentation ===");
+            System.out.println("File: " + (file != null ? file.getOriginalFilename() : "null"));
+            System.out.println("File size: " + (file != null ? file.getSize() : 0));
+            System.out.println("Threshold: " + threshold);
+
+            if (file == null || file.getSize() == 0) {
+                return ResponseEntity.badRequest()
+                        .body(new ErrorResponse("Please select a file to upload"));
+            }
+
+            PredictionResult result = predictionService.predictWithSegmentation(file, threshold);
+
+            if (result.isSuccess()) {
+                return ResponseEntity.ok(result);
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new ErrorResponse(result.getError()));
+            }
+        } catch (Exception e) {
+            System.err.println("Error in predictWithSegmentation: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Error processing segmentation: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Predict with segmentation from Cloudinary URL
+     * Accepts both URL paths for frontend compatibility
+     */
+    @PostMapping({"/predict-with-segmentation-from-url", "/predict-from-url-with-segmentation"})
+    public ResponseEntity<?> predictWithSegmentationFromUrl(@RequestBody Map<String, Object> request) {
+        try {
+            String imageUrl = (String) request.get("imageUrl");
+            double threshold = request.containsKey("threshold")
+                    ? ((Number) request.get("threshold")).doubleValue()
+                    : 0.4;
+
+            if (imageUrl == null || imageUrl.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(new ErrorResponse("Image URL is required"));
+            }
+
+            System.out.println("=== predictWithSegmentationFromUrl ===");
+            System.out.println("URL: " + imageUrl + ", threshold: " + threshold);
+
+            // Download image
+            RestTemplate downloadTemplate = new RestTemplate();
+            ResponseEntity<byte[]> downloadResponse = downloadTemplate.getForEntity(imageUrl, byte[].class);
+            byte[] imageBytes = downloadResponse.getBody();
+
+            if (imageBytes == null || imageBytes.length == 0) {
+                return ResponseEntity.badRequest()
+                        .body(new ErrorResponse("Failed to download image from URL"));
+            }
+
+            // Determine filename
+            String fileName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
+            if (fileName.contains("?")) {
+                fileName = fileName.substring(0, fileName.indexOf("?"));
+            }
+
+            String contentType = "image/jpeg";
+            if (fileName.toLowerCase().endsWith(".png")) contentType = "image/png";
+            else if (fileName.toLowerCase().endsWith(".dcm")) contentType = "application/dicom";
+
+            MultipartFile multipartFile = new org.springframework.mock.web.MockMultipartFile(
+                    "file", fileName, contentType, imageBytes);
+
+            PredictionResult result = predictionService.predictWithSegmentation(multipartFile, threshold);
+
+            if (result.isSuccess()) {
+                return ResponseEntity.ok(result);
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new ErrorResponse(result.getError()));
+            }
+        } catch (Exception e) {
+            System.err.println("Error in predictWithSegmentationFromUrl: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Error: " + e.getMessage()));
+        }
+    }
+
+    /**
      * Response classes
      */
     public static class HealthResponse {

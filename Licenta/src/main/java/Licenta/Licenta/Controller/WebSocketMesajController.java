@@ -44,7 +44,9 @@ public class WebSocketMesajController {
                 request.getImagineNume(),
                 request.getImagineTip(),
                 request.getImagineDataIncarcare(),
-                request.getImagineMetadata()
+                request.getImagineMetadata(),
+                request.getApelStatus(),
+                request.getApelDurata()
         );
     }
 

@@ -75,4 +75,9 @@ public class Mesaj {
     private String imagineDataIncarcare;
     private String imagineMetadata; // Metadate DICOM în format JSON
     // =================================================================
+
+    // ==================== CÂMPURI APEL VIDEO ====================
+    private String apelStatus;  // "primit", "pierdut", "respins"
+    private Integer apelDurata; // durata în secunde
+    // ============================================================
 }

@@ -1,5 +1,7 @@
 package Licenta.Licenta.Service;
 
+import Licenta.Licenta.Dto.SegmentationResult;
+
 import java.util.Map;
 
 public class PredictionResult {
@@ -14,6 +16,7 @@ public class PredictionResult {
     private double tumorTypeConfidence;
     private Map<String, Double> tumorTypeProbabilities;
     private Map<String, Double> rawMulticlassProbabilities;
+    private SegmentationResult segmentation;
 
     // Getters and Setters
     public boolean isSuccess() {
@@ -102,6 +105,14 @@ public class PredictionResult {
 
     public void setRawMulticlassProbabilities(Map<String, Double> rawMulticlassProbabilities) {
         this.rawMulticlassProbabilities = rawMulticlassProbabilities;
+    }
+
+    public SegmentationResult getSegmentation() {
+        return segmentation;
+    }
+
+    public void setSegmentation(SegmentationResult segmentation) {
+        this.segmentation = segmentation;
     }
 
     @Override

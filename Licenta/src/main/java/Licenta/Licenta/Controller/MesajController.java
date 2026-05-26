@@ -38,7 +38,8 @@ public class MesajController {
                     request.getPacientNume(), request.getPacientPrenume(), request.getPacientCnp(), request.getPacientDataNasterii(), request.getPacientSex(),
                     request.getPacientNumarTelefon(), request.getPacientIstoricMedical(), request.getPacientDetalii(), request.getPacientNumarImagini(),
                     request.getPacientImagini(), request.getImagineId(), request.getImagineUrl(), request.getImagineNume(), request.getImagineTip(),
-                    request.getImagineDataIncarcare(), request.getImagineMetadata()
+                    request.getImagineDataIncarcare(), request.getImagineMetadata(),
+                    request.getApelStatus(), request.getApelDurata()
             );
             return ResponseEntity.ok(mesaj);
         } catch (RuntimeException e) {
@@ -109,4 +110,9 @@ class MesajRequest {
     private String imagineDataIncarcare;
     private String imagineMetadata; // Metadate DICOM în format JSON
     // =================================================================
+
+    // ==================== CÂMPURI APEL VIDEO ====================
+    private String apelStatus;  // "primit", "pierdut", "respins"
+    private Integer apelDurata; // durata în secunde
+    // ============================================================
 }
