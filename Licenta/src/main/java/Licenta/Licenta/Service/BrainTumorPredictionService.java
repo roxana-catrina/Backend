@@ -12,6 +12,10 @@ import org.springframework.core.io.FileSystemResource;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import Licenta.Licenta.Dto.BoundingBox;
+import Licenta.Licenta.Dto.SegmentationResult;
+import Licenta.Licenta.Dto.TumorDimensions;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -223,6 +227,69 @@ public class BrainTumorPredictionService {
     }
 
     /**
+     * Predict tumor with segmentation overlay
+     *
+     * @param file The brain scan image file
+     * @param threshold Segmentation threshold (0.0 - 1.0)
+     * @return PredictionResult containing prediction + segmentation data
+     * @throws IOException if there's an error processing the image
+     */
+    public PredictionResult predictWithSegmentation(MultipartFile file, double threshold) throws IOException {
+        String url = pythonApiUrl + "/predict-with-segmentation?threshold=" + threshold;
+
+        System.out.println("=== predictWithSegmentation ===");
+        System.out.println("Sending to URL: " + url);
+        System.out.println("File: " + file.getOriginalFilename() + " (" + file.getSize() + " bytes)");
+
+        byte[] fileBytes = file.getBytes();
+
+        // Determine filename
+        String originalFilename = file.getOriginalFilename();
+        String filenameToSend = originalFilename != null ? originalFilename : "image.jpg";
+
+        // Write to temp file
+        File tempFile = File.createTempFile("seg-upload-", "-" + filenameToSend);
+        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+            fos.write(fileBytes);
+            fos.flush();
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        final String finalFilename = filenameToSend;
+        FileSystemResource fileResource = new FileSystemResource(tempFile) {
+            @Override
+            public String getFilename() {
+                return finalFilename;
+            }
+        };
+        body.add("file", fileResource);
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        try {
+            ResponseEntity<String> response;
+            try {
+                response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+            } catch (org.springframework.web.client.HttpClientErrorException.NotFound e) {
+                // Fallback: încearcă fără /api prefix
+                String fallbackUrl = "http://localhost:5000/predict-with-segmentation?threshold=" + threshold;
+                System.out.println("⚠️ 404 pe " + url + ", încerc fallback: " + fallbackUrl);
+                response = restTemplate.exchange(fallbackUrl, HttpMethod.POST, requestEntity, String.class);
+            }
+
+            System.out.println("Segmentation response: " + response.getStatusCode());
+            return parseResponseWithSegmentation(response.getBody());
+        } finally {
+            if (tempFile.exists()) {
+                tempFile.delete();
+            }
+        }
+    }
+
+    /**
      * Check if the Python API server is healthy
      *
      * @return true if the server is healthy, false otherwise
@@ -298,6 +365,95 @@ public class BrainTumorPredictionService {
             result.setError(root.get("error").asText());
         }
 
+        return result;
+    }
+
+    /**
+     * Parse JSON response that includes segmentation data from Python API
+     */
+    private PredictionResult parseResponseWithSegmentation(String jsonResponse) throws IOException {
+        JsonNode root = objectMapper.readTree(jsonResponse);
+
+        // Parsează mai întâi câmpurile standard de predicție
+        PredictionResult result = new PredictionResult();
+        result.setSuccess(root.has("success") ? root.get("success").asBoolean() : true);
+
+        if (root.has("prediction")) result.setPrediction(root.get("prediction").asText());
+        if (root.has("has_tumor")) result.setHasTumor(root.get("has_tumor").asBoolean());
+        if (root.has("confidence")) result.setConfidence(root.get("confidence").asDouble());
+        if (root.has("tumor_type")) result.setType(root.get("tumor_type").asText());
+        if (root.has("tumor_type_confidence")) result.setTumorTypeConfidence(root.get("tumor_type_confidence").asDouble());
+
+        if (root.has("probabilities")) {
+            JsonNode probabilities = root.get("probabilities");
+            if (probabilities.has("no_tumor")) result.setNoTumorProbability(probabilities.get("no_tumor").asDouble());
+            if (probabilities.has("tumor")) result.setTumorProbability(probabilities.get("tumor").asDouble());
+        }
+
+        if (root.has("tumor_type_probabilities")) {
+            JsonNode tumorTypeProbs = root.get("tumor_type_probabilities");
+            Map<String, Double> tumorTypeProbMap = new HashMap<>();
+            tumorTypeProbs.fields().forEachRemaining(entry ->
+                tumorTypeProbMap.put(entry.getKey(), entry.getValue().asDouble()));
+            result.setTumorTypeProbabilities(tumorTypeProbMap);
+        }
+
+        if (root.has("raw_multiclass_probabilities")) {
+            JsonNode rawProbs = root.get("raw_multiclass_probabilities");
+            Map<String, Double> rawProbMap = new HashMap<>();
+            rawProbs.fields().forEachRemaining(entry ->
+                rawProbMap.put(entry.getKey(), entry.getValue().asDouble()));
+            result.setRawMulticlassProbabilities(rawProbMap);
+        }
+
+        // Parsează segmentarea
+        if (root.has("segmentation")) {
+            JsonNode segNode = root.get("segmentation");
+            SegmentationResult seg = new SegmentationResult();
+
+            if (segNode.has("overlay_image_base64"))
+                seg.setOverlayImageBase64(segNode.get("overlay_image_base64").asText());
+            if (segNode.has("contour_image_base64"))
+                seg.setContourImageBase64(segNode.get("contour_image_base64").asText());
+            if (segNode.has("tumor_area_pixels"))
+                seg.setTumorAreaPixels(segNode.get("tumor_area_pixels").asInt());
+            if (segNode.has("tumor_percentage"))
+                seg.setTumorPercentage(segNode.get("tumor_percentage").asDouble());
+
+            // Bounding box
+            if (segNode.has("bounding_box")) {
+                JsonNode bbNode = segNode.get("bounding_box");
+                BoundingBox bb = new BoundingBox();
+                if (bbNode.has("x")) bb.setX(bbNode.get("x").asInt());
+                if (bbNode.has("y")) bb.setY(bbNode.get("y").asInt());
+                if (bbNode.has("width")) bb.setWidth(bbNode.get("width").asInt());
+                if (bbNode.has("height")) bb.setHeight(bbNode.get("height").asInt());
+                seg.setBoundingBox(bb);
+            }
+
+            // Dimensiuni tumoră
+            if (segNode.has("dimensions")) {
+                JsonNode dimNode = segNode.get("dimensions");
+                TumorDimensions dim = new TumorDimensions();
+                if (dimNode.has("width_pixels")) dim.setWidthPixels(dimNode.get("width_pixels").asInt());
+                if (dimNode.has("height_pixels")) dim.setHeightPixels(dimNode.get("height_pixels").asInt());
+                if (dimNode.has("width_mm")) dim.setWidthMm(dimNode.get("width_mm").asDouble());
+                if (dimNode.has("height_mm")) dim.setHeightMm(dimNode.get("height_mm").asDouble());
+                if (dimNode.has("area_pixels")) dim.setAreaPixels(dimNode.get("area_pixels").asInt());
+                if (dimNode.has("area_mm2")) dim.setAreaMm2(dimNode.get("area_mm2").asDouble());
+                if (dimNode.has("tumor_percentage")) dim.setTumorPercentage(dimNode.get("tumor_percentage").asDouble());
+                if (dimNode.has("pixel_spacing_mm")) dim.setPixelSpacingMm(dimNode.get("pixel_spacing_mm").asDouble());
+                seg.setDimensions(dim);
+            }
+
+            result.setSegmentation(seg);
+        }
+
+        if (!result.isSuccess() && root.has("error")) {
+            result.setError(root.get("error").asText());
+        }
+
+        System.out.println("Segmentation parsed: " + (result.getSegmentation() != null));
         return result;
     }
 }
