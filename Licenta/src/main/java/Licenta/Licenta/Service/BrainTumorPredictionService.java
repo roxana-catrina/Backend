@@ -6,7 +6,6 @@ import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -33,12 +32,13 @@ public class BrainTumorPredictionService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final String pythonApiUrl;
+    private final DicomConverter dicomConverter;
 
-    public BrainTumorPredictionService() {
+    public BrainTumorPredictionService(DicomConverter dicomConverter) {
         this.restTemplate = new RestTemplate();
         this.objectMapper = new ObjectMapper();
-        // Configure your Python API URL here
         this.pythonApiUrl = "http://localhost:5000/api";
+        this.dicomConverter = dicomConverter;
     }
 
     /**
@@ -246,6 +246,14 @@ public class BrainTumorPredictionService {
         // Determine filename
         String originalFilename = file.getOriginalFilename();
         String filenameToSend = originalFilename != null ? originalFilename : "image.jpg";
+
+        // Dacă e DICOM, convertește la PNG înainte de a trimite la Python
+        if (dicomConverter.isDicomFile(fileBytes, filenameToSend)) {
+            System.out.println("🔄 Fișier DICOM detectat, convertesc la PNG...");
+            fileBytes = dicomConverter.convertDicomToPng(fileBytes);
+            filenameToSend = filenameToSend.replaceAll("\\.[^.]+$", "") + ".png";
+            System.out.println("✅ Conversie completă, trimitem " + filenameToSend + " (" + fileBytes.length + " bytes)");
+        }
 
         // Write to temp file
         File tempFile = File.createTempFile("seg-upload-", "-" + filenameToSend);
