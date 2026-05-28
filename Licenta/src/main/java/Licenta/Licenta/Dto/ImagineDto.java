@@ -31,6 +31,7 @@ public class ImagineDto {
     // DICOM fields
     private Boolean isDicom;
     private Map<String, Object> dicomMetadata;
+    private String seriesId;
 
 
     // Câmpuri pentru imagine partajată

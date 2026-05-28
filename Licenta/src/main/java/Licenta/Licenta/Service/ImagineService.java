@@ -119,6 +119,7 @@ public class ImagineService {
                 img.getDataModificare(),
                 img.getIsDicom(),
                 img.getDicomMetadata(),
+                img.getSeriesId(),
                 img.getImagineId(),
                 img.getImagineUrl(),
                 img.getImagineNume(),
