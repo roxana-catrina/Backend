@@ -389,6 +389,7 @@ public class PacientController {
             @RequestParam(value = "statusAnaliza", defaultValue = "neanalizata") String statusAnaliza,
             @RequestParam(value = "isDicom", required = false) Boolean isDicom,
             @RequestParam(value = "dicomMetadata", required = false) String dicomMetadataJson,
+            @RequestParam(value = "seriesId", required = false) String seriesId,
             @RequestHeader(value = "Authorization", required = false) String token) {
 
         // Verify user exists
@@ -469,6 +470,7 @@ public class PacientController {
             imagine.setCloudinaryPublicId(publicId);
             imagine.setObservatii(observatii);
             imagine.setStatusAnaliza(statusAnaliza);
+            imagine.setSeriesId(seriesId);
             imagine.setDataIncarcare(new Date());
 
             // Process DICOM metadata if provided
@@ -649,6 +651,7 @@ public class PacientController {
                                     img.getDataModificare(),
                                     img.getIsDicom(),
                                     img.getDicomMetadata(),
+                                    img.getSeriesId(),
                                     img.getImagineId(),
                                     img.getImagineUrl(),
                                     img.getImagineNume(),
@@ -705,6 +708,7 @@ public class PacientController {
                         img.getDataModificare(),
                         img.getIsDicom(),
                         img.getDicomMetadata(),
+                        img.getSeriesId(),
                         img.getImagineId(),
                         img.getImagineUrl(),
                         img.getImagineNume(),
@@ -757,6 +761,7 @@ public class PacientController {
                         img.getDataModificare(),
                         img.getIsDicom(),
                         img.getDicomMetadata(),
+                        img.getSeriesId(),
                         img.getImagineId(),
                         img.getImagineUrl(),
                         img.getImagineNume(),

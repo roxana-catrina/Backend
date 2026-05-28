@@ -78,14 +78,22 @@ public class ImagineService {
 
         byte[] imageBytes = Base64.getDecoder().decode(base64Data);
 
-        // Uploadează noua imagine adnotată pe Cloudinary
+        // Uploadează noua imagine adnotată pe Cloudinary folosind temp file
+        // (unele versiuni Cloudinary SDK nu acceptă byte[] direct)
         String publicId = (imagine.getNume() != null ? imagine.getNume() : imageId) + "_annotated";
-        Map uploadResult = cloudinary.uploader().upload(imageBytes,
-                ObjectUtils.asMap("public_id", publicId, "overwrite", true));
+        java.io.File tempFile = java.io.File.createTempFile("annotated_", ".png");
+        try {
+            java.nio.file.Files.write(tempFile.toPath(), imageBytes);
+            Map uploadResult = cloudinary.uploader().upload(tempFile,
+                    ObjectUtils.asMap("public_id", publicId, "overwrite", true, "resource_type", "image"));
 
-        // Actualizează înregistrarea
-        imagine.setImageUrl((String) uploadResult.get("secure_url"));
-        imagine.setCloudinaryPublicId((String) uploadResult.get("public_id"));
+            // Actualizează înregistrarea
+            imagine.setImageUrl((String) uploadResult.get("secure_url"));
+            imagine.setCloudinaryPublicId((String) uploadResult.get("public_id"));
+            imagine.setIsDicom(false); // Acum e PNG, nu mai e DICOM
+        } finally {
+            tempFile.delete();
+        }
         imagine.setDataModificare(new Date());
 
         Imagine saved = imagineRepository.save(imagine);
@@ -111,6 +119,7 @@ public class ImagineService {
                 img.getDataModificare(),
                 img.getIsDicom(),
                 img.getDicomMetadata(),
+                img.getSeriesId(),
                 img.getImagineId(),
                 img.getImagineUrl(),
                 img.getImagineNume(),

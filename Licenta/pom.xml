@@ -143,12 +143,37 @@
 			<artifactId>spring-test</artifactId>
 		</dependency>
 
+		<!-- dcm4che pentru citirea/conversia fișierelor DICOM -->
+		<dependency>
+			<groupId>org.dcm4che</groupId>
+			<artifactId>dcm4che-core</artifactId>
+			<version>5.31.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.dcm4che</groupId>
+			<artifactId>dcm4che-image</artifactId>
+			<version>5.31.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.dcm4che</groupId>
+			<artifactId>dcm4che-imageio</artifactId>
+			<version>5.31.1</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>dcm4che-repo</id>
+			<name>dcm4che Repository</name>
+			<url>https://www.dcm4che.org/maven2</url>
+		</repository>
+	</repositories>
 
 	<build>
 		<plugins>

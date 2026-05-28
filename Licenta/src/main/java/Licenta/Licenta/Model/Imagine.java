@@ -41,6 +41,10 @@ public class Imagine {
     private Map<String, Object> dicomMetadata; // MongoDB stochează direct ca subdocument
     // ==========================
 
+    // Serie DICOM — null = imagine individuală, non-null = face parte dintr-o serie
+    @Field("seriesId")
+    private String seriesId;
+
     // ==================== CÂMPURI NOI PENTRU IMAGINI ====================
     @Field("imagine_id")
     private String imagineId; // ID-ul imaginii partajate (nullable)
